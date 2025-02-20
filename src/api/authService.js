@@ -19,3 +19,32 @@ export function registerService(username, password) {
         }
     });
 }
+
+// 修改用户名
+export function updateUserNameService(username, new_username) {
+    return request.get('/auth/updateName', {
+        params: {
+            username,
+            new_username
+        }
+    });  
+}
+
+// 修改密码
+export function updatePasswordService(username, new_password) {
+    return request.get('/auth/updatePassword', {
+        params: {
+            username,
+            new_password
+        }
+    });  
+}
+
+// 删除账号
+export function deleteAccountService(username) {
+    return request.get('/auth/deleteUser', {
+        params: {
+            username
+        }
+    });  
+}

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Auth from '@/Auth.vue'; // 新增登录/注册页面组件
+import Settings from '@/Settings.vue'; // 新增设置页面组件
 
 const routes = [
   {
@@ -12,7 +13,7 @@ const routes = [
     redirect: '/settings',   // 登陆后，重定向到主页面
     meta: { requiresAuth: true }, // 主页面路由，添加认证标志
     children: [
-      // { path: '/', component: }
+      { path: '/settings', component: Settings }
     ]
   }
 ];
