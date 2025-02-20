@@ -7,7 +7,73 @@ import { loginService, updateUserNameService, updatePasswordService, deleteAccou
 // 定义状态变量
 const newUsername = ref("");
 const newPassword = ref("");
+const newEmail = ref("");
+const confirmPassword = ref("");
+const showConfirmationModal = ref(false);
+const actionType = ref("");
 const router = useRouter();
+
+// 弹窗确认修改逻辑
+// 利用参数控制操作类型，体现了策略模式和状态模式的思想
+const handleConfirm = async () => {
+  const encryptedPassword = CryptoJS.SHA256(confirmPassword.value).toString();
+  try {
+    const response = await loginService(sessionStorage.getItem("UserName"), encryptedPassword);
+    if (response.success) {
+      if (actionType.value === "username") {
+        const res1 = await updateUserNameService(sessionStorage.getItem("UserName"), newUsername.value);
+        if (res1 === "Invalid username") {
+          alert("Invalid username");
+        } else {
+          sessionStorage.setItem("UserName", newUsername.value);
+          alert("用户名修改成功！");
+        }
+      } else if (actionType.value === "password") {
+        const new_password = CryptoJS.SHA256(newPassword.value).toString();
+        const res2 = await updatePasswordService(sessionStorage.getItem("UserName"), new_password);
+        if (res2 === "Invalid username") {
+          alert("Invalid username");
+        } else {
+          alert("密码修改成功！");
+        }
+      } else if (actionType.value === "delete") {
+        const res3 = await deleteAccountService(sessionStorage.getItem("UserName"));
+        if (res3 === "delete successfully") {
+          alert("账号 " + sessionStorage.getItem("UserName") + " 注销成功");
+          sessionStorage.clear();
+          sessionStorage.setItem("isAuthenticated", "false");
+          router.push("/auth"); // 注销账号后跳转到登录/注册页面
+        } else {
+          alert("账号注销失败，请重试");
+        }
+      } else if (actionType.value === "email") {
+        const res4 = await updateEmailService(sessionStorage.getItem("UserName"), newEmail.value);
+        if (res4 === "Invalid username") {
+          alert("Invalid username");
+        } else {
+          alert("邮箱修改成功");
+        }
+      }
+      closeModal();
+    } else if (response.message === "Invalid password") {
+      alert("密码错误，请重试。");
+    }
+  } catch (error) {
+    alert("身份验证错误：" + error.message);  // 身份验证错误：new_password is not defined
+  }
+};
+
+// 打开弹窗
+const openModal = (type) => {
+  actionType.value = type;
+  showConfirmationModal.value = true;
+};
+
+// 关闭弹窗
+const closeModal = () => {
+  confirmPassword.value = "";
+  showConfirmationModal.value = false;
+};
 
 // 退出登录逻辑
 const handleLogout = () => {
@@ -45,6 +111,19 @@ const handleLogout = () => {
         <div class="form-group-rightdown">
           <button @click="handleLogout" class="logout-btn" title="退出当前账户，但保留账户数据">退出登录</button>
           <button @click="openModal('delete')" class="delete-btn" title="永久删除账户及所有数据，无法恢复">注销账号</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 修改/注销身份验证模态框 -->
+    <div v-if="showConfirmationModal" class="modal">
+      <div class="modal-content">
+        <h2>确认修改</h2>
+        <p>请输入当前密码以确认操作</p>
+        <input v-model="confirmPassword" type="password" placeholder="输入当前密码" />
+        <div class="modal-actions">
+          <button @click="handleConfirm">确认</button>
+          <button @click="closeModal">取消</button>
         </div>
       </div>
     </div>
