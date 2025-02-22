@@ -1,4 +1,4 @@
-<!-- src/components/Auth.vue -->
+<!-- src/Auth.vue -->
 <template>
   <div class="auth-container">
     <!-- Left half: Image Carousel -->
@@ -25,6 +25,34 @@
           </div>
           <button type="submit">{{ isLogin ? "登录" : "注册" }}</button>
         </form>
+        <p @click="openModal">忘记密码？</p>
+      </div>
+    </div>
+   <!-- 邮箱验证模态框 -->
+   <div v-if="showEmailModal" class="modal">
+      <div class="modal-content">
+        <h2>邮箱验证登录</h2>
+        <!-- 第一个表单：发送验证邮件 -->
+        <form @submit.prevent="sendVerifyEmail">
+          <div class="modal-input">
+            <p>用户名:</p>
+            <input type="text" v-model="modalUsername" placeholder="请输入用户名" class="modal-content-input" required/>
+            <button type="submit" class="modal-button" :disabled="!canSendEmail">发送验证邮件</button>
+          </div>
+        </form>
+
+        <!-- 第二个表单：输入验证码并验证 -->
+        <form @submit.prevent="verifyEmailCode">
+          <div class="modal-input">
+            <p>验证码:</p>
+            <input v-model="enteredConfirmCode" type="text" placeholder="输入验证码" class="modal-content-input" required/>
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="modal-button">确认</button>
+            <button @click="closeModal" type="button" class="modal-button">取消</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -32,7 +60,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { loginService, registerService} from '@/api/authService';
+import { loginService, registerService, sendVerificationEmailService, verifyEmailCodeService } from '@/api/authService';
 import { verifyService } from '@/api/toolsService';
 import { useRouter } from 'vue-router';
 import CryptoJS from 'crypto-js';
@@ -48,6 +76,12 @@ const modalUsername = ref('');
 const verifyCode = ref('');
 const verifyCodeImgUrl = ref('');
 const enteredVerifyCode = ref('');
+
+// 邮箱验证模态框相关
+const showEmailModal = ref(false);
+const enteredConfirmCode = ref('');
+const canSendEmail = ref(true);  // 控制发送邮件按钮是否可用
+const lastSentTime = ref(0);     // 上次发送邮件的时间
 
 // 验证码请求限制变量
 let canFetchCaptcha = true;
@@ -155,7 +189,60 @@ async function handleAuth() {
   }
 }
 
+// 打开弹窗
+const openModal = () => {
+  showEmailModal.value = true;
+};
 
+// 关闭弹窗
+const closeModal = () => {
+  confirmCode.value = "";
+  showEmailModal.value = false;
+};
+
+// 发送验证邮件
+async function sendVerifyEmail() {
+  const currentTime = Date.now();
+  if (currentTime - lastSentTime.value < 30000) { // 判断30秒内是否已经发送过邮件
+    alert("验证邮件发送过于频繁，请稍等片刻再试。");
+    return;
+  }
+
+  lastSentTime.value = currentTime;
+  canSendEmail.value = false;  // 禁用按钮
+  setTimeout(() => {
+    canSendEmail.value = true; // 30秒后恢复按钮可用
+  }, 30000);
+
+  try {
+    const res = await sendVerificationEmailService(username.value);
+    if (res == "Invalid username") {
+      alert("Email sent successfully");
+    } else {
+      alert("发送邮件失败：" + res);
+    }
+  } catch (error) {
+    alert("发送邮件错误：" + error.message);
+  }
+}
+
+// 校验邮箱验证码
+async function verifyEmailCode() {
+  try {
+    const res = await verifyEmailCodeService(modalUsername.value, enteredConfirmCode.value);
+    if (res) {
+      alert("验证码验证成功，正在跳转...");
+      // 完成登录
+      sessionStorage.setItem("isAuthenticated", "true");
+      sessionStorage.setItem("UserName", username.value);
+      router.push("/");  // 验证成功后跳转到主页面
+    } else {
+      alert("验证码错误，请重试。");
+    }
+  } catch (error) {
+    alert("验证失败：" + error.message);
+  }
+}
 </script>
 <style scoped>
 .auth-container {
@@ -318,5 +405,124 @@ async function handleAuth() {
 
 .auth-card p:hover {
   color: #3ca374;
+}
+
+/* 模态框背景和居中设置 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* 确保模态框位于最上层 */
+}
+
+/* 模态框内容 */
+.modal-content {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  width: 90%;
+  max-width: 450px; /* 限制最大宽度 */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* 阴影效果 */
+  transition: transform 0.3s ease, opacity 0.3s ease; /* 动画效果 */
+}
+
+.modal-content h2 {
+  font-size: 22px;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.modal-content p {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+/* 输入框样式 */
+.modal-content-input {
+  min-width: 100px;
+  max-width: 155px;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+/* 输入框焦点效果 */
+.modal-content-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* 水平排列输入框和按钮 */
+.modal-input {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;  /* 控制子元素之间的水平间距 */
+  align-items: center;
+}
+
+/* 发送邮件按钮 */
+.modal-button {
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: auto; /* 自动宽度 */
+  min-width: 140px; /* 设置最小宽度 */
+}
+
+.modal-button:hover {
+  background-color: #0056b3;
+}
+
+/* 模态框按钮区域 */
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+/* 确认和取消按钮 */
+.modal-actions button {
+  max-width: 40px;
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 45%;
+}
+
+.modal-actions button:hover {
+  background-color: #218838;
+}
+
+/* 取消按钮 */
+.modal-actions button:last-child {
+  max-width: 70px;
+  background-color: #dc3545;
+}
+
+.modal-actions button:last-child:hover {
+  background-color: #c82333;
 }
 </style>

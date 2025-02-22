@@ -48,3 +48,32 @@ export function deleteAccountService(username) {
         }
     });  
 }
+
+// 修改邮箱
+export function updateEmailService(username, new_email) {
+    return request.get('/auth/updateEmail', {
+        params: {
+            username,
+            new_email
+        }
+    });  
+}
+
+// 发送邮箱验证码
+export function sendVerificationEmailService(username) {
+    return request.get('/auth/sendEmail', {
+        params: {
+            username
+        }
+    });  
+}
+
+// 验证邮箱验证码
+export function verifyEmailCodeService(username, code) {
+    return request.get('/auth/checkCode', {
+        params: {
+            username,
+            code
+        }
+    });  
+}

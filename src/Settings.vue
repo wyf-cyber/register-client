@@ -2,11 +2,12 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import CryptoJS from "crypto-js";
-import { loginService, updateUserNameService, updatePasswordService, deleteAccountService } from "@/api/authService";
+import { loginService, updateUserNameService, updatePasswordService, deleteAccountService, updateEmailService } from "@/api/authService";
 
 // 定义状态变量
 const newUsername = ref("");
 const newPassword = ref("");
+const newEmail = ref("");
 const confirmPassword = ref("");
 const showConfirmationModal = ref(false);
 const actionType = ref("");
@@ -44,7 +45,14 @@ const handleConfirm = async () => {
         } else {
           alert("账号注销失败，请重试");
         }
-      } 
+      } else if (actionType.value === "email") {
+        const res4 = await updateEmailService(sessionStorage.getItem("UserName"), newEmail.value);
+        if (res4 === "Invalid username") {
+          alert("Invalid username");
+        } else {
+          alert("邮箱修改成功");
+        }
+      }
       closeModal();
     } else if (response.message === "Invalid password") {
       alert("密码错误，请重试。");
@@ -99,7 +107,14 @@ const handleLogout = () => {
 
       <!-- 右半部分 -->
       <div class="settings-right">
-        <div class="form-group-rightdown">
+        <!-- 邮箱信息绑定（可选） -->
+        <div class="form-group-rightup">
+          <label for="email">绑定邮箱号</label>
+          <input id="email" v-model="newEmail" type="text" placeholder="输入新邮箱号" maxlength="40" />
+          <button @click="openModal('email')">绑定邮箱号</button>
+        </div>
+        <!-- 退出登录和注销账号 -->
+        <div class="form-group-rightdown">  
           <button @click="handleLogout" class="logout-btn" title="退出当前账户，但保留账户数据">退出登录</button>
           <button @click="openModal('delete')" class="delete-btn" title="永久删除账户及所有数据，无法恢复">注销账号</button>
         </div>
