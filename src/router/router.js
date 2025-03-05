@@ -4,17 +4,20 @@ import Settings from '@/Settings.vue'; // 新增设置页面组件
 
 const routes = [
   {
-    path: '/auth', // 登录/注册页面路由
-    component: Auth
+    path: '/',
+    redirect: '/settings'
   },
   {
-    path: '/', 
-    component: Navbar, 
-    redirect: '/settings',   // 登陆后，重定向到主页面
-    meta: { requiresAuth: true }, // 主页面路由，添加认证标志
-    children: [
-      { path: '/settings', component: Settings }
-    ]
+    path: '/auth',
+    name: 'auth',
+    component: Auth,
+    meta: { requiresUnauth: true }  // 添加未认证标志
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: Settings,
+    meta: { requiresAuth: true }
   }
 ];
 
@@ -28,11 +31,11 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = sessionStorage.getItem("isAuthenticated") === "true";
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/auth');
-  } else if (to.path === '/auth' && isAuthenticated) {
-    next('/'); 
+    next({ name: 'auth' });
+  } else if (to.meta.requiresUnauth && isAuthenticated) {
+    next({ name: 'settings' });
   } else {
-    next(); 
+    next();
   }
 });
 
