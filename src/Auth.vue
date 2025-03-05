@@ -1,528 +1,744 @@
-<!-- src/Auth.vue -->
 <template>
-  <div class="auth-container">
-    <!-- Left half: Image Carousel -->
-    <div class="left-half">
-      <div class="content-wrapper">
-        <p class="title">XXX医院线上挂号服务平台</p>
-        <img src="./assets/images/1.jpg" alt="photo not found" class="left-image" />
-      </div>
-    </div>
-    <!-- Right half: Auth card -->
-    <div class="right-half">
-      <div class="auth-card">
-        <div class="auth-toggle">
-          <h2 :class="{'active': isLogin}" @click="toggleAuthMode('login')">登录</h2>
-          <h2 :class="{'active': !isLogin}" @click="toggleAuthMode('regist')">注册</h2>
+  <div class="page-background">
+    <div class="body">
+      <div class="main-box">
+        <div :class="['container', 'container-register', { 'is-txl': isLogin }]">
+          <form @submit.prevent="register">
+            <h2 class="title">注册</h2>
+            <input class="form__input" type="text" v-model="registerForm.username" placeholder="请输入用户名"/>
+            <input class="form__input" type="email" v-model="registerForm.email" placeholder="请输入邮箱"/>
+            <input class="form__input" type="password" v-model="registerForm.password" placeholder="请输入密码"/>
+            <input class="form__input" type="password" v-model="registerForm.confirmPassword" placeholder="请确认密码"/>
+            <div class="captcha-wrapper">
+              <img :src="verifyCodeImgUrl" alt="Verification" @click="fetchVerifyCode" class="captcha-image" title="点击图片刷新验证码"/>
+              <input class="form__input captcha-input" type="text" v-model="enteredVerifyCode" placeholder="输入验证码"/>
+            </div>
+            <div class="form__button" @click="register">立即注册</div>
+          </form>
         </div>
-        <form @submit.prevent="handleAuth">
-          <input type="text" v-model="username" placeholder="请输入用户名" required class="auth-card-input"/>
-          <input type="password" v-model="password" placeholder="请输入密码" required class="auth-card-input"/>
-          <!-- 验证码区域 -->
-          <div class="captcha-container">
-            <img :src="verifyCodeImgUrl" alt="Verification" @click="fetchVerifyCode" class="captcha-image" title="点击图片刷新验证码"/>
-            <input type="text" v-model="enteredVerifyCode" placeholder="输入验证码" required class="captcha-input"/>
+        <div :class="['container', 'container-login', { 'is-txl is-z200': isLogin }]">
+          <form @submit.prevent="login">
+            <h2 class="title">登录</h2>
+            <input class="form__input" type="text" v-model="loginForm.username" placeholder="请输入用户名"/>
+            <input class="form__input" type="password" v-model="loginForm.password" placeholder="请输入密码"/>
+            <div class="captcha-wrapper">
+              <img :src="verifyCodeImgUrl" alt="Verification" @click="fetchVerifyCode" class="captcha-image" title="点击图片刷新验证码"/>
+              <input class="form__input captcha-input" type="text" v-model="enteredVerifyCode" placeholder="输入验证码"/>
+            </div>
+            <div class="form__button" @click="login">立即登录</div>
+            <p class="forgot-password" @click="openModal">忘记密码？</p>
+          </form>
+        </div>
+        <div :class="['switch', { 'login': isLogin }]">
+          <div class="switch__circle"></div>
+          <div class="switch__circle switch__circle_top"></div>
+          <div class="switch__container">
+            <h2>{{ isLogin ? '您好 !' : '欢迎回来 !' }}</h2>
+            <p>
+              {{
+                isLogin
+                    ? '如果您还没有账号，请点击下方立即注册按钮进行账号注册'
+                    : '如果您已经注册过账号，请点击下方立即登录按钮进行登录'
+              }}
+            </p>
+            <div class="form__button" @click="isLogin = !isLogin">
+              {{ isLogin ? '立即注册' : '立即登录' }}
+            </div>
           </div>
-          <button type="submit">{{ isLogin ? "登录" : "注册" }}</button>
-        </form>
-        <p @click="openModal">忘记密码？</p>
+        </div>
       </div>
-    </div>
-   <!-- 邮箱验证模态框 -->
-   <div v-if="showEmailModal" class="modal">
-      <div class="modal-content">
-        <h2>邮箱验证登录</h2>
-        <!-- 第一个表单：发送验证邮件 -->
-        <form @submit.prevent="sendVerifyEmail">
-          <div class="modal-input">
-            <p>用户名:</p>
-            <input type="text" v-model="modalUsername" placeholder="请输入用户名" class="modal-content-input" required/>
-            <button type="submit" class="modal-button" :disabled="!canSendEmail">发送验证邮件</button>
-          </div>
-        </form>
 
-        <!-- 第二个表单：输入验证码并验证 -->
-        <form @submit.prevent="verifyEmailCode">
-          <div class="modal-input">
-            <p>验证码:</p>
-            <input v-model="enteredConfirmCode" type="text" placeholder="输入验证码" class="modal-content-input" required/>
-          </div>
+      <div v-if="showEmailModal" class="email-modal">
+        <div class="modal-content">
+          <h2>邮箱验证登录</h2>
+          <form @submit.prevent="sendVerifyEmail">
+            <div class="modal-input">
+              <input type="text" v-model="modalUsername" placeholder="请输入用户名" required/>
+              <button type="submit" :disabled="!canSendEmail">发送验证邮件</button>
+            </div>
+          </form>
 
-          <div class="modal-actions">
-            <button type="submit" class="modal-button">确认</button>
-            <button @click="closeModal" type="button" class="modal-button">取消</button>
-          </div>
-        </form>
+          <form @submit.prevent="verifyEmailCode">
+            <div class="modal-input">
+              <input v-model="enteredConfirmCode" type="text" placeholder="输入验证码" required/>
+            </div>
+            <div class="modal-actions">
+              <button type="submit">确认</button>
+              <button @click="closeModal" type="button">取消</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div v-if="notification.show" :class="['notification', notification.type]">
+        {{ notification.message }}
       </div>
     </div>
   </div>
 </template>
-
-<script setup>
+  
+<script>
 import { ref, onMounted } from 'vue';
 import { loginService, registerService, sendVerificationEmailService, verifyEmailCodeService } from '@/api/authService';
 import { verifyService } from '@/api/toolsService';
 import { useRouter } from 'vue-router';
 import CryptoJS from 'crypto-js';
+  
+export default {
+  name: 'Login',
+  setup() {
+    const isLogin = ref(true);
+    const router = useRouter();
+    const loginForm = ref({
+      username: '',
+      password: '',
+    });
+    const registerForm = ref({
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    });
 
+    const verifyCode = ref('');
+    const verifyCodeImgUrl = ref('');
+    const enteredVerifyCode = ref('');
+    let canFetchCaptcha = true;
 
-const isLogin = ref(true);
-const username = ref('');
-const password = ref('');
-const router = useRouter();
+    const showEmailModal = ref(false);
+    const modalUsername = ref('');
+    const enteredConfirmCode = ref('');
+    const canSendEmail = ref(true);
+    const lastSentTime = ref(0);
 
-// 验证码相关
-const modalUsername = ref('');
-const verifyCode = ref('');
-const verifyCodeImgUrl = ref('');
-const enteredVerifyCode = ref('');
+    const notification = ref({
+      show: false,
+      message: '',
+      type: 'info'
+    });
 
-// 邮箱验证模态框相关
-const showEmailModal = ref(false);
-const enteredConfirmCode = ref('');
-const canSendEmail = ref(true);  // 控制发送邮件按钮是否可用
-const lastSentTime = ref(0);     // 上次发送邮件的时间
-
-// 验证码请求限制变量
-let canFetchCaptcha = true;
-
-
-// 获取验证码
-async function fetchVerifyCode() {
-  if (!canFetchCaptcha) {
-    alert("请求过于频繁，请稍候再试。");
-    return;
-  }
-
-  canFetchCaptcha = false;
-  setTimeout(() => {
-    canFetchCaptcha = true;
-  }, 10000);
-
-  try {
-    const res = await verifyService();
-    if (res && res.verifyCode && res.verifyCodeImgUrl) {
-      verifyCode.value = res.verifyCode;
-      verifyCodeImgUrl.value = res.verifyCodeImgUrl;
-    } else {
-      alert("获取验证码失败。" + res);
-    }
-  } catch (error) {
-    alert("验证码请求错误：" + error.message);
-  }
-} 
-
-// 页面加载时获取初始验证码
-onMounted(fetchVerifyCode);
-
-// 切换登录和注册模式
-function toggleAuthMode(mode) {
-  if (mode === 'login') {
-    isLogin.value = true;
-  } else if (mode === 'regist') {
-    isLogin.value = false;
-  }
-}
-
-// 输入字段安全性检查
-function validateInput() {
-  const usernamePattern = /^[a-zA-Z0-9_]{3,15}$/;
-  const captchaPattern = /^[a-zA-Z0-9]{5}$/;
-
-  if (!usernamePattern.test(username.value)) {
-    alert("用户名不合法，请使用3-15个字母、数字或下划线。");
-    return false;
-  }
-
-  if (!captchaPattern.test(enteredVerifyCode.value)) {
-    alert("验证码格式不正确。");
-    return false;
-  }
-
-  return true;
-}
-
-// 登录或注册处理
-async function handleAuth() {
-  if (!validateInput()) {
-    return;
-  }
-
-  // 密码加密
-  const encryptedPassword = CryptoJS.SHA256(password.value).toString();
-
-  if (enteredVerifyCode.value != verifyCode.value) {
-    alert("验证码错误，请重试。");
-    return;
-  }
-
-  if (isLogin.value) {
-    try {
-      const response = await loginService(username.value, encryptedPassword);
-      if (response.success) {
-        sessionStorage.setItem("isAuthenticated", "true");
-        sessionStorage.setItem("UserName", username.value);
-        // alert("登录成功");
-        router.push("/"); // 登录成功后跳转到主页面
-      } else if (response.message === "Invalid password") {
-        alert("密码错误，请重试。");
-      } else if (response.message === "Invalid username") {
-        alert("用户名未找到，请注册。");
+    async function fetchVerifyCode() {
+      if (!canFetchCaptcha) {
+        showNotification("请求过于频繁，请稍候再试。", "error");
+        return;
       }
-    } catch (error) {
-      alert("登录错误：" + error.message);
-    }
-  } else {
-    try {
-      const response = await registerService(username.value, encryptedPassword);
-      if (response.success) {
-        alert("注册成功，您可以现在登录。");
-        isLogin.value = true;
-      } else if (response.message === "Username already exists") {
-        alert("用户名已存在，请选择另一个。");
-      } else if (response.message === "User inserting failed") {
-        alert("添加新用户失败，原因未知");
+
+      canFetchCaptcha = false;
+      setTimeout(() => {
+        canFetchCaptcha = true;
+      }, 10000);
+
+      try {
+        const res = await verifyService();
+        if (res && res.verifyCode && res.verifyCodeImgUrl) {
+          verifyCode.value = res.verifyCode;
+          verifyCodeImgUrl.value = res.verifyCodeImgUrl;
+        } else {
+          showNotification("获取验证码失败。" + res, "error");
+        }
+      } catch (error) {
+        showNotification("验证码请求错误：" + error.message, "error");
       }
-    } catch (error) {
-      alert("注册错误：" + error.message);
     }
-  }
-}
 
-// 打开弹窗
-const openModal = () => {
-  showEmailModal.value = true;
-};
+    function validateInput(form, isRegistering = false) {
+      const usernamePattern = /^[a-zA-Z0-9_]{3,15}$/;
+      const captchaPattern = /^[a-zA-Z0-9]{5}$/;
 
-// 关闭弹窗
-const closeModal = () => {
-  confirmCode.value = "";
-  showEmailModal.value = false;
-};
+      if (!usernamePattern.test(isRegistering ? form.username : form.username)) {
+        showNotification("用户名不合法，请使用3-15个字母、数字或下划线。", "error");
+        return false;
+      }
 
-// 发送验证邮件
-async function sendVerifyEmail() {
-  const currentTime = Date.now();
-  if (currentTime - lastSentTime.value < 30000) { // 判断30秒内是否已经发送过邮件
-    alert("验证邮件发送过于频繁，请稍等片刻再试。");
-    return;
-  }
+      if (isRegistering) {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(form.email)) {
+          showNotification("请输入有效的邮箱地址。", "error");
+          return false;
+        }
+      }
 
-  lastSentTime.value = currentTime;
-  canSendEmail.value = false;  // 禁用按钮
-  setTimeout(() => {
-    canSendEmail.value = true; // 30秒后恢复按钮可用
-  }, 30000);
+      if (!captchaPattern.test(enteredVerifyCode.value)) {
+        showNotification("验证码格式不正确。", "error");
+        return false;
+      }
 
-  try {
-    const res = await sendVerificationEmailService(username.value);
-    if (res == "Invalid username") {
-      alert("Email sent successfully");
-    } else {
-      alert("发送邮件失败：" + res);
+      return true;
     }
-  } catch (error) {
-    alert("发送邮件错误：" + error.message);
-  }
-}
 
-// 校验邮箱验证码
-async function verifyEmailCode() {
-  try {
-    const res = await verifyEmailCodeService(modalUsername.value, enteredConfirmCode.value);
-    if (res) {
-      alert("验证码验证成功，正在跳转...");
-      // 完成登录
-      sessionStorage.setItem("isAuthenticated", "true");
-      sessionStorage.setItem("UserName", username.value);
-      router.push("/");  // 验证成功后跳转到主页面
-    } else {
-      alert("验证码错误，请重试。");
+    async function login() {
+      if (!validateInput(loginForm.value)) {
+        return;
+      }
+
+      const encryptedPassword = CryptoJS.SHA256(loginForm.value.password).toString();
+
+      if (enteredVerifyCode.value != verifyCode.value) {
+        showNotification("验证码错误，请重试。", "error");
+        return;
+      }
+
+      try {
+        const response = await loginService(loginForm.value.username, encryptedPassword);
+        if (response.success) {
+          showNotification("登录成功！", "success");
+          sessionStorage.setItem("isAuthenticated", "true");
+          sessionStorage.setItem("UserName", loginForm.value.username);
+          router.push("/");
+          resetForms();
+        } else if (response.message === "Invalid password") {
+          showNotification("密码错误，请重试。", "error");
+        } else if (response.message === "Invalid username") {
+          showNotification("用户名未找到，请注册。", "error");
+        }
+      } catch (error) {
+        showNotification("登录错误：" + error.message, "error");
+        await fetchVerifyCode();
+      }
     }
-  } catch (error) {
-    alert("验证失败：" + error.message);
+
+    async function register() {
+      if (!validateInput(registerForm.value, true)) {
+        return;
+      }
+
+      if (registerForm.value.password !== registerForm.value.confirmPassword) {
+        showNotification("两次输入的密码不一致", "error");
+        return;
+      }
+
+      const encryptedPassword = CryptoJS.SHA256(registerForm.value.password).toString();
+
+      if (enteredVerifyCode.value != verifyCode.value) {
+        showNotification("验证码错误，请重试。", "error");
+        return;
+      }
+
+      try {
+        const response = await registerService(
+          registerForm.value.username, 
+          registerForm.value.email, 
+          encryptedPassword
+        );
+        if (response.success) {
+          showNotification("注册成功，您可以现在登录。", "success");
+          isLogin.value = true;
+          resetForms();
+        } else if (response.message === "Username already exists") {
+          showNotification("用户名已存在，请选择另一个。", "error");
+        } else if (response.message === "Email already exists") {
+          showNotification("该邮箱已被注册。", "error");
+        } else if (response.message === "User inserting failed") {
+          showNotification("注册失败，请稍后重试", "error");
+        }
+      } catch (error) {
+        showNotification("注册错误：" + error.message, "error");
+      }
+    }
+
+    const openModal = () => {
+      showEmailModal.value = true;
+    };
+
+    const closeModal = () => {
+      showEmailModal.value = false;
+      enteredConfirmCode.value = '';
+    };
+
+    async function sendVerifyEmail() {
+      const currentTime = Date.now();
+      if (currentTime - lastSentTime.value < 30000) {
+        showNotification("验证邮件发送过于频繁，请稍等片刻再试。", "error");
+        return;
+      }
+
+      lastSentTime.value = currentTime;
+      canSendEmail.value = false;
+      setTimeout(() => {
+        canSendEmail.value = true;
+      }, 30000);
+
+      try {
+        const res = await sendVerificationEmailService(modalUsername.value);
+        if (res == "Invalid username") {
+          showNotification("验证邮件已发送", "success");
+        } else {
+          showNotification("发送邮件失败：" + res, "error");
+        }
+      } catch (error) {
+        showNotification("发送邮件错误：" + error.message, "error");
+      }
+    }
+
+    async function verifyEmailCode() {
+      try {
+        const res = await verifyEmailCodeService(modalUsername.value, enteredConfirmCode.value);
+        if (res) {
+          showNotification("验证码验证成功，正在跳转...", "success");
+          sessionStorage.setItem("isAuthenticated", "true");
+          sessionStorage.setItem("UserName", modalUsername.value);
+          router.push("/");
+          resetForms();
+        } else {
+          showNotification("验证码错误，请重试。", "error");
+        }
+      } catch (error) {
+        showNotification("验证失败：" + error.message, "error");
+      }
+    }
+
+    function resetForms() {
+      loginForm.value = {
+        username: '',
+        password: '',
+      };
+      registerForm.value = {
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+      };
+      enteredVerifyCode.value = '';
+    }
+
+    const showNotification = (message, type = 'info') => {
+      notification.value.show = true;
+      notification.value.message = message;
+      notification.value.type = type;
+      
+      setTimeout(() => {
+        notification.value.show = false;
+      }, 3000);
+    };
+
+    onMounted(fetchVerifyCode);
+
+    return {
+      isLogin,
+      loginForm,
+      registerForm,
+      verifyCodeImgUrl,
+      enteredVerifyCode,
+      showEmailModal,
+      modalUsername,
+      enteredConfirmCode,
+      canSendEmail,
+      login,
+      register,
+      fetchVerifyCode,
+      openModal,
+      closeModal,
+      sendVerifyEmail,
+      verifyEmailCode,
+      notification
+    };
   }
 }
 </script>
-<style scoped>
-.auth-container {
-  display: flex;
+  
+<style lang="scss" scoped>
+.page-background {
+  width: 100vw;
   height: 100vh;
-  width: 72vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-image: url('@/assets/images/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
 }
 
-/* Left half: Image */
-.left-half {
-  width: 50%;
+.body {
+  position: static;
+  width: 100%;
+  height: 100vh;
+  display: flex;   
+  justify-content: center;
+  align-items: center;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  color: #a0a5a8;
+}
+
+.main-box {
+  position: relative;
+  width: 1000px;
+  min-width: 1000px;
+  min-height: 600px;
+  height: 600px;
+  padding: 25px;
+  background-color: #ecf0f3;
+  box-shadow: 1px 1px 100px 10PX #ecf0f3;
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.container, .switch, .email-modal {
+  z-index: 2;
+}
+
+.container {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #ffffff;
-  position: relative; /* 允许内部绝对定位 */
+  position: absolute;
+  top: 0;
+  width: 600px;
+  height: 100%;
+  padding: 25px;
+  background-color: #ecf0f3;
+  transition: all 1.25s;
+
+  form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    color: #a0a5a8;
+
+    .form__icon {
+      object-fit: contain;
+      width: 30px;
+      margin: 0 5px;
+      opacity: .5;
+      transition: .15s;
+
+      &:hover {
+        opacity: 1;
+        transition: .15s;
+        cursor: pointer;
+      }
+    }
+
+    .title {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 3;
+      color: #181818;
+    }
+
+    .text {
+      margin-top: 30px;
+      margin-bottom: 12px;
+    }
+
+    .form__input {
+      width: 350px;
+      height: 40px;
+      margin: 8px;
+      padding-left: 25px;  
+      font-size: 17px;
+      letter-spacing: 0.15px;
+      border: none;
+      outline: none;
+      font-family: 'Great Vibes', 'Pacifico', cursive;
+      background-color: #ecf0f3;
+      transition: 0.25s ease;
+      border-radius: 8px;
+      box-shadow: inset 2px 2px 4px #d1d9e6, inset -2px -2px 4px #f9f9f9;
+
+      &::placeholder {
+        color: #a0a5a8;
+      }
+    }
+  }
 }
 
-.content-wrapper {
-  text-align: center; /* 居中内容 */
-  width: 100%; /* 确保内容宽度一致 */
+.container-register {
+  z-index: 100;
+  left: calc(100% - 600px);
 }
 
-.title {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #42b983;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3); /* 添加文字阴影 */
-  margin-bottom: 1rem; /* 与图片的间距 */
-  font-family: 'Arial', sans-serif; /* 字体美化 */
+.container-login {
+  left: calc(100% - 600px);
+  z-index: 0;
 }
 
-.left-image {
-  width: 100%;
-  height: 375px;
-  object-fit: cover;
-  border-radius: 8px; /* 增加图片圆角 */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 图片投影效果 */
+.is-txl {
+  left: 0;
+  transition: 1.25s;
+  transform-origin: right;
 }
-/* Right half: Auth card */
-.right-half {
-  width: 40%;
+
+.is-z200 {
+  z-index: 200;
+  transition: 1.25s;
+}
+
+.switch {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #ffffff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 400px;
+  padding: 50px;
+  z-index: 200;
+  transition: 1.25s;
+  background-color: #ecf0f3;
+  overflow: hidden;
+  box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #f9f9f9;
+  color: #a0a5a8;
+
+  .switch__circle {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background-color: #ecf0f3;
+    box-shadow: inset 8px 8px 12px #d1d9e6, inset -8px -8px 12px #f9f9f9;
+    bottom: -60%;
+    left: -60%;
+    transition: 1.25s;
+  }
+
+  .switch__circle_top {
+    top: -30%;
+    left: 60%;
+    width: 300px;
+    height: 300px;
+  }
+
+  .switch__container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    position: absolute;
+    width: 400px;
+    padding: 50px 55px;
+    transition: 1.25s;
+
+    h2 {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 3;
+      color: #181818;
+    }
+
+    p {
+      font-size: 14px;
+      letter-spacing: 0.25px;
+      text-align: center;
+      line-height: 1.6;
+    }
+  }
 }
-.auth-card {
-  width: 100%;
-  max-width: 320px;
-  padding: 2rem;
-  border-radius: 16px; /* 增加圆角 */
-  background: linear-gradient(145deg, #ffffff, #f3f3f3); /* 添加渐变背景 */
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.2); /* 添加阴影 */
+
+.login {
+  left: calc(100% - 400px);
+
+  .switch__circle {
+    left: 0;
+  }
+}
+
+.form__button {
+  width: 180px;
+  height: 50px;
+  border-radius: 25px;
+  margin-top: 50px;
   text-align: center;
-}
-
-.auth-toggle {
-  flex-direction: row;
-  gap: 20px;  /* 控制子元素之间的水平间距 */
-}
-
-.auth-card h2 {
-  margin: 1rem 30px 1.5rem; /* 上方 1.5rem，左右 20px，下方 0 */
-  font-size: 1.5rem;
-  color: #767676;
-  font-weight: bold;
-  display: inline-block;
-  padding-bottom: 0.3rem;
+  line-height: 50px;
+  font-size: 14px;
+  letter-spacing: 2px;
+  background-color: #4b70e2;
+  color: #f9f9f9;
   cursor: pointer;
+  box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f9f9f9;
+
+  &:hover {
+    box-shadow: 2px 2px 3px 0 rgba(255, 255, 255, 50%),
+    -2px -2px 3px 0 rgba(116, 125, 136, 50%),
+    inset -2px -2px 3px 0 rgba(255, 255, 255, 20%),
+    inset 2px 2px 3px 0 rgba(0, 0, 0, 30%);
+  }
 }
 
-.auth-card h2.active {
-  margin: 1rem 30px 1.5rem; /* 上方 1.5rem，左右 20px，下方 0 */
-  font-size: 1.5rem;
-  color: #252525;
-  font-weight: bold;
-  border-bottom: 2px solid #42b983; /* 添加底部分隔线 */
-  display: inline-block;
-  padding-bottom: 0.3rem;
-  cursor: pointer;
-}
-
-.auth-card-input {
-  width: 100%;
-  padding: 0.8rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 6px; /* 增加圆角 */
-  background: #fafafa;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-}
-
-.auth-card-input:focus {
-  border-color: #42b983; /* 聚焦时高亮边框 */
-  outline: none;
-  box-shadow: 0 0 5px rgba(66, 185, 131, 0.5);
-}
-
-.captcha-container {
+.captcha-wrapper {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  border-top: 1px solid #eee; /* 添加顶部分隔线 */
-  padding-top: 1rem;
+  gap: 10px;
+  width: 350px;
+  margin: 4px 0;
+
+  .captcha-image {
+    width: 100px;
+    height: 40px;
+    cursor: pointer;
+    border-radius: 8px;
+  }
+
+  .captcha-input {
+    flex: 1;
+  }
 }
 
-.captcha-image {
-  width: 110px;
-  height: 40px;
+.forgot-password {
+  margin-top: 20px;
+  color: #4b70e2;
   cursor: pointer;
-  border-radius: 4px; /* 添加圆角 */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
+  font-size: 14px;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
-.captcha-image:hover {
-  transform: scale(1.05); /* 悬浮时放大 */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.captcha-input {
-  width: 120px;
-  padding: 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1rem;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.auth-card form button {
-  width: 100%;
-  padding: 0.8rem;
-  border: none;
-  background: linear-gradient(145deg, #42b983, #3ca374); /* 按钮渐变 */
-  color: white;
-  font-weight: bold;
-  font-size: 1rem;
-  border-radius: 6px; /* 圆角 */
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(66, 185, 131, 0.2);
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.auth-card form button:hover {
-  background: linear-gradient(145deg, #3ca374, #42b983);
-  transform: translateY(-3px); /* 悬浮上移 */
-  box-shadow: 0 6px 12px rgba(66, 185, 131, 0.3);
-}
-
-.auth-card p {
-  margin-top: 1rem;
-  color: #42b983;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.auth-card p:hover {
-  color: #3ca374;
-}
-
-/* 模态框背景和居中设置 */
-.modal {
+.email-modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* 确保模态框位于最上层 */
+  z-index: 1000;
+
+  .modal-content {
+    background-color: #ecf0f3;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #f9f9f9;
+    width: 90%;
+    max-width: 450px;
+
+    h2 {
+      font-size: 24px;
+      color: #181818;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      height: 40px;
+      margin: 8px;
+      padding-left: 25px;
+      font-size: 15px;
+      border: none;
+      outline: none;
+      background-color: #ecf0f3;
+      border-radius: 8px;
+      box-shadow: inset 2px 2px 4px #d1d9e6, inset -2px -2px 4px #f9f9f9;
+
+      &::placeholder {
+        color: #a0a5a8;
+      }
+    }
+
+    button {
+      width: auto;
+      min-width: 120px;
+      height: 40px;
+      margin: 8px;
+      border-radius: 20px;
+      background-color: #4b70e2;
+      color: #f9f9f9;
+      border: none;
+      cursor: pointer;
+      box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f9f9f9;
+
+      &:hover {
+        box-shadow: 2px 2px 3px 0 rgba(255, 255, 255, 50%),
+                   -2px -2px 3px 0 rgba(116, 125, 136, 50%),
+                   inset -2px -2px 3px 0 rgba(255, 255, 255, 20%),
+                   inset 2px 2px 3px 0 rgba(0, 0, 0, 30%);
+      }
+
+      &:disabled {
+        background-color: #a0a5a8;
+        cursor: not-allowed;
+      }
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      gap: 15px;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
 }
 
-/* 模态框内容 */
-.modal-content {
-  background: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  text-align: center;
-  width: 90%;
-  max-width: 450px; /* 限制最大宽度 */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* 阴影效果 */
-  transition: transform 0.3s ease, opacity 0.3s ease; /* 动画效果 */
-}
-
-.modal-content h2 {
-  font-size: 22px;
-  color: #333;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-.modal-content p {
-  font-size: 16px;
-  color: #555;
-  margin-bottom: 30px;
-}
-
-/* 输入框样式 */
-.modal-content-input {
-  min-width: 100px;
-  max-width: 155px;
-  padding: 12px;
-  margin-bottom: 20px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.3s ease;
-}
-
-/* 输入框焦点效果 */
-.modal-content-input:focus {
-  border-color: #007bff;
-  outline: none;
-}
-
-/* 水平排列输入框和按钮 */
-.modal-input {
+.form__icons {
   display: flex;
-  flex-direction: row;
-  gap: 20px;  /* 控制子元素之间的水平间距 */
-  align-items: center;
-}
-
-/* 发送邮件按钮 */
-.modal-button {
-  padding: 12px 20px;
+  justify-content: center;
   margin-bottom: 20px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
+
+  .form__icon {
+    width: 40px;
+    height: 40px;
+    opacity: 0.8;
+    transition: 0.15s;
+
+    &:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 8px;
   font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  width: auto; /* 自动宽度 */
-  min-width: 140px; /* 设置最小宽度 */
+  font-weight: 500;
+  z-index: 9999;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  
+  &.info {
+    background-color: #ecf0f3;
+    color: #4b70e2;
+    border-left: 4px solid #4b70e2;
+  }
+  
+  &.success {
+    background-color: #ecf0f3;
+    color: #2ecc71;
+    border-left: 4px solid #2ecc71;
+  }
+  
+  &.error {
+    background-color: #ecf0f3;
+    color: #e74c3c;
+    border-left: 4px solid #e74c3c;
+  }
 }
 
-.modal-button:hover {
-  background-color: #0056b3;
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
-/* 模态框按钮区域 */
-.modal-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-/* 确认和取消按钮 */
-.modal-actions button {
-  max-width: 40px;
-  padding: 10px 20px;
-  font-size: 14px;
-  background-color: #28a745;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  width: 45%;
-}
-
-.modal-actions button:hover {
-  background-color: #218838;
-}
-
-/* 取消按钮 */
-.modal-actions button:last-child {
-  max-width: 70px;
-  background-color: #dc3545;
-}
-
-.modal-actions button:last-child:hover {
-  background-color: #c82333;
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 </style>
