@@ -11,11 +11,12 @@ export function loginService(username, password) {
 }
 
 // 用户注册服务
-export function registerService(username, password) {
+export function registerService(username, password, email) {
     return request.get('/auth/register', {
         params: {  // 同样使用 params 传递查询参数
             username,
-            password
+            password,
+            email
         }
     });
 }

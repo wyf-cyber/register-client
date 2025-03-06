@@ -217,8 +217,8 @@ export default {
       try {
         const response = await registerService(
           registerForm.value.username, 
-          registerForm.value.email, 
-          encryptedPassword
+          encryptedPassword, 
+          registerForm.value.email
         );
         if (response.success) {
           showNotification("注册成功，您可以现在登录。", "success");
@@ -308,7 +308,7 @@ export default {
       
       setTimeout(() => {
         notification.value.show = false;
-      }, 3000);
+      }, 5000);
     };
 
     onMounted(fetchVerifyCode);
@@ -719,6 +719,12 @@ export default {
     background-color: #ecf0f3;
     color: #e74c3c;
     border-left: 4px solid #e74c3c;
+  }
+  
+  &.warning {
+    background-color: #ecf0f3;
+    color: #f39c12;
+    border-left: 4px solid #f39c12;
   }
 }
 
