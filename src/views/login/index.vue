@@ -10,8 +10,27 @@
             <input class="form__input" type="password" v-model="registerForm.password" placeholder="请输入密码"/>
             <input class="form__input" type="password" v-model="registerForm.confirmPassword" placeholder="请确认密码"/>
             <div class="captcha-wrapper">
-              <img :src="verifyCodeImgUrl" alt="Verification" @click="fetchVerifyCode" class="captcha-image" title="点击图片刷新验证码"/>
-              <input class="form__input captcha-input" type="text" v-model="enteredVerifyCode" placeholder="输入验证码"/>
+              <!-- 如果验证码图片加载失败，或尚未加载，则显示圆形加载动画 -->
+              <img 
+                v-if="verifyCodeImgUrl" 
+                :src="verifyCodeImgUrl" 
+                alt="验证码" 
+                @click="fetchVerifyCode" 
+                @error="handleImageError"
+                class="captcha-image" 
+                title="点击图片刷新验证码"
+              />
+              <div v-else class="captcha-loading">
+                <circle-loading/>
+                <span class="reload-text" @click="fetchVerifyCode">点击重新加载</span>
+              </div>
+              <input 
+                class="form__input captcha-input" 
+                type="text" 
+                v-model="enteredVerifyCode" 
+                placeholder="输入验证码"
+                maxlength="5"
+              />
             </div>
             <div class="form__button" @click="register">立即注册</div>
           </form>
@@ -22,8 +41,26 @@
             <input class="form__input" type="text" v-model="loginForm.username" placeholder="请输入用户名"/>
             <input class="form__input" type="password" v-model="loginForm.password" placeholder="请输入密码"/>
             <div class="captcha-wrapper">
-              <img :src="verifyCodeImgUrl" alt="Verification" @click="fetchVerifyCode" class="captcha-image" title="点击图片刷新验证码"/>
-              <input class="form__input captcha-input" type="text" v-model="enteredVerifyCode" placeholder="输入验证码"/>
+              <img 
+                v-if="verifyCodeImgUrl" 
+                :src="verifyCodeImgUrl" 
+                alt="验证码" 
+                @click="fetchVerifyCode" 
+                @error="handleImageError"
+                class="captcha-image" 
+                title="点击图片刷新验证码"
+              />
+              <div v-else class="captcha-loading">
+                <circle-loading/>
+                <span class="reload-text" @click="fetchVerifyCode">点击重新加载</span>
+              </div>
+              <input 
+                class="form__input captcha-input" 
+                type="text" 
+                v-model="enteredVerifyCode" 
+                placeholder="输入验证码"
+                maxlength="5"
+              />
             </div>
             <div class="form__button" @click="login">立即登录</div>
             <p class="forgot-password" @click="openModal">忘记密码？</p>
@@ -79,11 +116,11 @@
   
 <script>
 import { ref, onMounted } from 'vue';
-import { loginService, registerService, sendVerificationEmailService, verifyEmailCodeService } from '@/api/authService';
-import { verifyService } from '@/api/toolsService';
+import { loginService, registerService, sendVerificationEmailService, verifyEmailCodeService, verifyService } from '@/views/login/api';
 import { useRouter } from 'vue-router';
 import CryptoJS from 'crypto-js';
-  
+import CircleLoading from '@/views/components/circle_loading.vue';
+
 export default {
   name: 'Login',
   setup() {
@@ -117,12 +154,20 @@ export default {
       type: 'info'
     });
 
+    const handleImageError = () => {
+      verifyCodeImgUrl.value = ''; // 清空图片URL触发loading状态
+      showNotification("验证码图片加载失败，请点击重试", "error");
+    };
+
     async function fetchVerifyCode() {
       if (!canFetchCaptcha) {
         showNotification("请求过于频繁，请稍候再试。", "error");
         return;
       }
 
+      // 清空当前验证码图片，显示loading状态
+      verifyCodeImgUrl.value = '';
+      
       canFetchCaptcha = false;
       setTimeout(() => {
         canFetchCaptcha = true;
@@ -133,8 +178,9 @@ export default {
         if (res && res.verifyCode && res.verifyCodeImgUrl) {
           verifyCode.value = res.verifyCode;
           verifyCodeImgUrl.value = res.verifyCodeImgUrl;
+          enteredVerifyCode.value = ''; // 清空已输入的验证码
         } else {
-          showNotification("获取验证码失败。" + res, "error");
+          showNotification("获取验证码失败，请重试", "error");
         }
       } catch (error) {
         showNotification("验证码请求错误：" + error.message, "error");
@@ -330,7 +376,8 @@ export default {
       closeModal,
       sendVerifyEmail,
       verifyEmailCode,
-      notification
+      notification,
+      handleImageError,
     };
   }
 }
@@ -574,10 +621,34 @@ export default {
     height: 40px;
     cursor: pointer;
     border-radius: 8px;
+    transition: opacity 0.3s;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  .captcha-loading {
+    width: 100px;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    border-radius: 8px;
+    cursor: pointer;
+
+    .reload-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
   }
 
   .captcha-input {
     flex: 1;
+    margin: 0;
   }
 }
 

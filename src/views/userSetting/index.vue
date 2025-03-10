@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import CryptoJS from "crypto-js";
-import { loginService, updateUserNameService, updatePasswordService, deleteAccountService, updateEmailService } from "@/api/authService";
+import { loginService, updateUserNameService, updatePasswordService, deleteAccountService, updateEmailService } from "@/views/userSetting/api";
 
 // 定义状态变量
 const newUsername = ref("");
