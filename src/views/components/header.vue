@@ -27,7 +27,7 @@
         width: 100%;
         height: 60px;
         padding: 0 20px;
-        background: #fff;
+        background: #2c3e50;
         box-shadow: 0 1px 4px rgba(0,21,41,.08);
         display: flex;
         justify-content: space-between;

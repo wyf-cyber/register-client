@@ -293,7 +293,7 @@ onMounted(() => {
     top: 60px;
     bottom: 0;
     width: 200px;
-    background: #001529;
+    background: #34495e;
     z-index: 900;
     transition: width 0.3s ease, transform 0.3s ease;
 
