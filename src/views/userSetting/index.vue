@@ -171,6 +171,11 @@ onMounted(() => {
     singleOpenName.value = [currentRoute.matched[0].name];
   }
 });
+
+// 添加移动菜单开关的处理方法
+const handleMobileToggle = () => {
+  showMobileMenu.value = !showMobileMenu.value;
+};
 </script>
 
 <template>
@@ -179,42 +184,52 @@ onMounted(() => {
     <div class="layout-content">
       <div class="layout-sider" :class="{ collapsed: isCollapsed, 'mobile-open': showMobileMenu }">
         <div class="sidebar-container">
-          <div class="collapse-btn" @click="toggleCollapse">
+          <div class="sidebar-shrink-button" @click="toggleCollapse">
             <Icon :type="isCollapsed ? 'ios-arrow-forward' : 'ios-arrow-back'" />
           </div>
-          <Menu
-            ref="sideMenu"
-            :class="{ collapsed: isCollapsed }"
-            accordion
-            :active-name="$route.name"
-            :open-names="singleOpenName"
-            :theme="menuTheme"
-            width="auto"
-            @on-select="changeMenu"
-          >
-            <template v-for="item in menuList" :key="item.name">
-              <Submenu v-if="item.children" :name="item.name">
-                <template #title>
+          <div class="sidebar-content">
+            <div class="user-panel">
+              <div class="user-avatar">
+                <Icon type="ios-person" size="24" />
+              </div>
+              <div class="user-info" v-show="!isCollapsed">
+                <div class="user-name">{{ username }}</div>
+                <div class="user-role">用户</div>
+              </div>
+            </div>
+            <Menu
+              ref="sideMenu"
+              :class="{ collapsed: isCollapsed }"
+              accordion
+              :active-name="$route.name"
+              :open-names="singleOpenName"
+              :theme="menuTheme"
+              width="auto"
+              @on-select="changeMenu"
+            >
+              <template v-for="item in menuList" :key="item.name">
+                <Submenu v-if="item.children" :name="item.name">
+                  <template #title>
+                    <Icon :type="item.icon" />
+                    <span class="layout-text">{{ item.title }}</span>
+                  </template>
+                  <MenuItem v-for="child in item.children" :key="child.name" :name="child.name">
+                    <Icon :type="child.icon" />
+                    <span class="layout-text">{{ child.title }}</span>
+                  </MenuItem>
+                </Submenu>
+                <MenuItem v-else :name="item.name">
                   <Icon :type="item.icon" />
                   <span class="layout-text">{{ item.title }}</span>
-                </template>
-                <MenuItem v-for="child in item.children" :key="child.name" :name="child.name">
-                  <Icon :type="child.icon" />
-                  <span class="layout-text">{{ child.title }}</span>
                 </MenuItem>
-              </Submenu>
-              <MenuItem v-else :name="item.name">
-                <Icon :type="item.icon" />
-                <span class="layout-text">{{ item.title }}</span>
-              </MenuItem>
-            </template>
-          </Menu>
+              </template>
+            </Menu>
+          </div>
         </div>
       </div>
+      
+      <!-- 页面内容 -->
       <div class="layout-main" :class="{ collapsed: isCollapsed }">
-        <div class="mobile-menu-toggle" @click="toggleMobileMenu">
-          <Icon type="ios-menu" size="30" />
-        </div>
         <div class="content-wrapper">
           <h1>个人账号设置</h1>
           <div class="settings-container">
@@ -293,9 +308,10 @@ onMounted(() => {
     top: 60px;
     bottom: 0;
     width: 200px;
-    background: #34495e;
+    background: #2b3643;
     z-index: 900;
-    transition: width 0.3s ease, transform 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.1);
 
     &.collapsed {
       width: 80px;
@@ -304,134 +320,112 @@ onMounted(() => {
     &.mobile-open {
       transform: translateX(0);
     }
+    
+    .sidebar-container {
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+
+      .sidebar-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        
+        .user-panel {
+          padding: 15px;
+          display: flex;
+          align-items: center;
+          margin-bottom: 10px;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          
+          .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            margin-right: 10px;
+          }
+          
+          .user-info {
+            overflow: hidden;
+            
+            .user-name {
+              color: #fff;
+              font-weight: 500;
+              font-size: 14px;
+              white-space: nowrap;
+            }
+            
+            .user-role {
+              color: rgba(255,255,255,0.7);
+              font-size: 12px;
+            }
+          }
+        }
+      }
+
+      .collapsed {
+        width: 80px !important;
+
+        .layout-text {
+          display: none;
+        }
+      }
+    }
   }
 
   &-main {
     flex: 1;
-    // margin-left: 200px;
-    height: calc(90vh - 60px);
-    width: calc(90vw - 200px);
-    margin-top: 20px;
-    margin-left: 40px;
-    background: #f5f4f4;
-    padding: 0px;
-    display: flex;
+    margin-left: 200px;
+    transition: all 0.3s ease;
+    height: calc(100vh - 60px);
+    width: calc(100vw - 200px);
+    background: #f5f7fa;
+    padding: 20px;
     box-sizing: border-box;
+    overflow-y: auto;
 
     &.collapsed {
       margin-left: 80px;
       width: calc(100vw - 80px);
     }
-  }
-
-  .content-wrapper {
-    width: 100%;
-    max-width: none;
-    margin: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-
-    @media screen and (min-width: 1024px) {
-      margin: 20px;
-      max-width: 100%;
-    }
-  }
-
-  .settings-container {
-    background: #fff;
-    padding: 30px;
-    margin: 20px 0;
-    display: flex;
-    flex-direction: row;
-    gap: 40px;
-    flex: 1;
-    width: 100%;
-  }
-
-  .settings-left,
-  .settings-right {
-    flex: 1;
-    min-width: 280px;
-    padding: 20px;
-  }
-
-  .divider {
-    width: 2px;
-    background-color: #f0f2f5;
-    height: auto;
-  }
-
-  .sidebar-container {
-    position: relative;
-    height: 100%;
-
-    .collapse-btn {
-      position: absolute;
-      right: -12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 24px;
-      height: 24px;
-      line-height: 24px;
-      text-align: center;
+    
+    .content-wrapper {
       background: #fff;
-      border-radius: 50%;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      cursor: pointer;
-      z-index: 10;
-    }
-
-    .collapsed {
-      width: 80px !important;
-
-      .layout-text {
-        display: none;
-      }
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      height: 100%;
+      overflow-y: auto;
     }
   }
 
   .mobile-menu-toggle {
     display: none;
-  }
-
-  h1 {
-    margin-bottom: 0;
-  }
-}
-
-@media screen and (min-width: 1024px) {
-  .layout {
-    .settings-container {
-      margin: 0;
-    }
-    .settings-left,
-    .settings-right {
-      min-width: 250px;
-      padding: 15px;
-    }
-  }
-}
-
-@media screen and (max-width: 1024px) {
-  .layout {
-    .content-wrapper {
-      padding: 30px;
-    }
-
-    .settings-container {
-      gap: 30px;
-      margin: 20px auto;
-      padding: 0 15px;
-    }
-
-    .settings-left,
-    .settings-right {
-      min-width: 250px;
-      padding: 15px;
+    position: fixed;
+    left: 15px;
+    top: 70px;
+    z-index: 1100;
+    background: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
     }
   }
 }
@@ -446,6 +440,15 @@ onMounted(() => {
         transform: translateX(0);
         width: 200px;
       }
+
+      .sidebar-container {
+        .sidebar-shrink-button {
+          width: 36px;
+          height: 36px;
+          line-height: 36px;
+          right: -18px;
+        }
+      }
     }
 
     &-main {
@@ -455,35 +458,7 @@ onMounted(() => {
     }
 
     .mobile-menu-toggle {
-      display: block;
-      position: fixed;
-      top: 70px;
-      left: 15px;
-      z-index: 1100;
-      cursor: pointer;
-    }
-
-    .content-wrapper {
-      padding: 20px;
-    }
-
-    .settings-container {
-      flex-direction: column;
-      gap: 20px;
-      margin: 15px auto;
-      padding: 0 10px;
-    }
-
-    .settings-left,
-    .settings-right {
-      padding: 10px;
-      min-width: auto;
-    }
-
-    .divider {
-      width: 100%;
-      height: 2px;
-      margin: 10px 0;
+      display: flex;
     }
   }
 }

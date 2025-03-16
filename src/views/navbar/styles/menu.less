@@ -4,6 +4,151 @@
     width: 100%;
 }
 
+/* 菜单项样式 */
+.ivu-menu {
+  background: #2b3643;
+  
+  .ivu-menu-item,
+  .ivu-menu-submenu-title {
+    color: rgba(255, 255, 255, 0.7);
+    padding: 14px 24px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s;
+    position: relative;
+    cursor: pointer;
+    z-index: 1;
+    
+    &:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .ivu-icon {
+      margin-right: 50px;
+    }
+  }
+  
+  .ivu-menu-item-active {
+    color: #fff;
+    background: rgba(0, 170, 255, 0.2);
+    border-right: 3px solid #00aaff;
+    
+    &:hover {
+      background: rgba(0, 170, 255, 0.25);
+    }
+  }
+}
+
+.ivu-menu-dark.ivu-menu-vertical .ivu-menu-item-active:not(.ivu-menu-submenu),
+.ivu-menu-dark.ivu-menu-vertical .ivu-menu-submenu-title-active:not(.ivu-menu-submenu) {
+  color: #fff;
+  background: rgba(0, 170, 255, 0.2);
+  border-right: 3px solid #00aaff;
+}
+
+.ivu-menu-submenu {
+  .ivu-menu {
+    background: #1e2732;
+    
+    .ivu-menu-item {
+      padding-left: 45px !important;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+    }
+  }
+}
+
 .ivu-btn-text:hover {
-    background-color: rgba(255,255,255,.2) !important;
+  background-color: rgba(255,255,255,.1) !important;
+}
+
+/* 菜单收缩按钮样式 */
+.sidebar-shrink-button {
+  position: absolute;
+  right: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dedbdb;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 1001;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* 收缩状态下的菜单项 */
+.menu-shrink-item {
+  padding: 10px 0;
+  width: 60px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+  .ivu-menu-item, .ivu-menu-submenu-title {
+    padding: 12px 15px !important;
+  }
+  
+  .ivu-menu-submenu .ivu-menu .ivu-menu-item {
+    padding-left: 35px !important;
+  }
+  
+  .sidebar-shrink-button {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .mobile-menu-toggle {
+    display: flex;
+  }
+}
+
+/* 增加侧边栏折叠状态下的按钮位置调整 */
+.layout-sider.collapsed .sidebar-shrink-button {
+  right: -15px;
+}
+
+/* 移动端菜单开关样式 */
+.sidebar-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  position: fixed;
+  left: 15px;
+  top: 70px;
+  z-index: 1100;
+  background: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  }
 }

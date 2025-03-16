@@ -4,22 +4,29 @@
 </style>
 
 <template>
-  <div :style="{background: bgColor}" class="ivu-shrinkable-menu">
-    <slot name="top"></slot>
-    <sidebar-menu
-      v-show="!shrink"
-      :menu-theme="theme"
-      :menu-list="menuList"
-      :open-names="openNames"
-      @on-change="handleChange"
-    ></sidebar-menu>
-    <sidebar-menu-shrink
-      v-show="shrink"
-      :menu-theme="theme"
-      :menu-list="menuList"
-      :icon-color="shrinkIconColor"
-      @on-change="handleChange"
-    ></sidebar-menu-shrink>
+  <div class="sidebar-wrapper">
+    <!-- 移动端菜单开关按钮 -->
+    <div class="mobile-menu-toggle" v-if="showMobileToggle" @click="handleMobileToggle">
+      <Icon type="ios-menu" size="30" />
+    </div>
+    
+    <div :style="{background: bgColor}" class="ivu-shrinkable-menu">
+      <slot name="top"></slot>
+      <sidebar-menu
+        v-show="!shrink"
+        :menu-theme="theme"
+        :menu-list="menuList"
+        :open-names="openNames"
+        @on-change="handleChange"
+      ></sidebar-menu>
+      <sidebar-menu-shrink
+        v-show="shrink"
+        :menu-theme="theme"
+        :menu-list="menuList"
+        :icon-color="shrinkIconColor"
+        @on-change="handleChange"
+      ></sidebar-menu-shrink>
+    </div>
   </div>
 </template>
 
@@ -54,6 +61,11 @@ export default {
     },
     openNames: {
       type: Array
+    },
+    // 新增属性：是否显示移动端菜单开关
+    showMobileToggle: {
+      type: Boolean,
+      default: true
     }
   },
   computed: {
@@ -83,6 +95,13 @@ export default {
         });
       }
       this.$emit("on-change", name);
+    },
+    
+    /**
+     * 处理移动端菜单开关点击
+     */
+    handleMobileToggle() {
+      this.$emit("on-mobile-toggle");
     }
   }
 };

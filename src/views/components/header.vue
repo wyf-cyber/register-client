@@ -5,8 +5,11 @@
             <h1 class="hospital-name">XX医院预约挂号系统</h1>
         </div>
         <div class="header-right">
-            <span class="welcome">欢迎您,</span>
-            <span class="username">{{ username }}</span>
+            <div class="user-info">
+                <Icon type="ios-person" size="18" />
+                <span class="username">{{ username }}</span>
+                <Icon type="ios-arrow-down" size="14" class="arrow-icon" />
+            </div>
         </div>
     </div>
 </template>
@@ -27,8 +30,8 @@
         width: 100%;
         height: 60px;
         padding: 0 20px;
-        background: #2c3e50;
-        box-shadow: 0 1px 4px rgba(0,21,41,.08);
+        background: linear-gradient(to right, #2c3e50, #3c5a76);
+        box-shadow: 0 2px 10px rgba(0,0,0,.1);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -38,26 +41,59 @@
             align-items: center;
             
             .logo {
-                height: 40px;
-                margin-right: 10px;
+                height: 36px;
+                margin-right: 12px;
+                border-radius: 4px;
+                transition: transform 0.3s;
+                
+                &:hover {
+                    transform: scale(1.05);
+                }
             }
 
             .hospital-name {
                 font-size: 18px;
-                font-weight: bold;
-                color: #1890ff;
+                font-weight: 600;
+                color: #fff;
+                letter-spacing: 0.5px;
             }
         }
 
         &-right {
-            .welcome {
-                color: #666;
-                margin-right: 5px;
+            .user-info {
+                display: flex;
+                align-items: center;
+                background: rgba(255,255,255,0.1);
+                padding: 6px 12px;
+                border-radius: 20px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                
+                &:hover {
+                    background: rgba(255,255,255,0.2);
+                }
+                
+                .username {
+                    color: #fff;
+                    font-weight: 500;
+                    margin: 0 6px;
+                }
+                
+                .arrow-icon {
+                    color: rgba(255,255,255,0.7);
+                }
             }
+        }
+    }
 
-            .username {
-                color: #1890ff;
-                font-weight: bold;
+    @media (max-width: 768px) {
+        .header {
+            padding: 0 10px;
+            
+            &-left {
+                .hospital-name {
+                    font-size: 16px;
+                }
             }
         }
     }
