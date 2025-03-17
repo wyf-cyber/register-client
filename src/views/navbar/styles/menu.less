@@ -4,6 +4,51 @@
     width: 100%;
 }
 
+/* 主侧边栏容器样式 */
+.sidebar-container {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 用户面板样式 */
+.user-panel {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    margin-right: 10px;
+  }
+  
+  .user-info {
+    overflow: hidden;
+    
+    .user-name {
+      color: #fff;
+      font-weight: 500;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    
+    .user-role {
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+    }
+  }
+}
+
 /* 菜单项样式 */
 .ivu-menu {
   background: #2b3643;
@@ -26,7 +71,7 @@
     }
     
     .ivu-icon {
-      margin-right: 50px;
+      margin-right: 10px;
     }
   }
   
@@ -66,36 +111,17 @@
   background-color: rgba(255,255,255,.1) !important;
 }
 
-/* 菜单收缩按钮样式 */
-.sidebar-shrink-button {
-  position: absolute;
-  right: -15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #dedbdb;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  z-index: 1001;
+/* 侧边栏布局样式 */
+.layout-sider {
+  position: fixed;
+  left: 0;
+  top: 60px;
+  bottom: 0;
+  width: 200px;
+  background: #2b3643;
+  z-index: 900;
   transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-  }
-}
-
-/* 收缩状态下的菜单项 */
-.menu-shrink-item {
-  padding: 10px 0;
-  width: 60px;
-  margin: 0 auto;
-  text-align: center;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
 }
 
 /* 响应式调整 */
@@ -108,19 +134,17 @@
     padding-left: 35px !important;
   }
   
-  .sidebar-shrink-button {
-    width: 36px;
-    height: 36px;
-  }
-  
   .mobile-menu-toggle {
     display: flex;
   }
-}
-
-/* 增加侧边栏折叠状态下的按钮位置调整 */
-.layout-sider.collapsed .sidebar-shrink-button {
-  right: -15px;
+  
+  .layout-sider {
+    transform: translateX(-100%);
+    
+    &.mobile-open {
+      transform: translateX(0);
+    }
+  }
 }
 
 /* 移动端菜单开关样式 */

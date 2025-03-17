@@ -7,44 +7,80 @@
   <div class="sidebar-wrapper">
     <!-- 移动端菜单开关按钮 -->
     <div class="mobile-menu-toggle" v-if="showMobileToggle" @click="handleMobileToggle">
-      <Icon type="ios-menu" size="30" />
+      <el-icon size="24"><Menu /></el-icon>
+    </div>
+    
+    <!-- 用户面板 -->
+    <div class="user-panel" v-if="showUserPanel">
+      <div class="user-avatar">
+        <el-icon size="24"><User /></el-icon>
+      </div>
+      <div class="user-info" v-show="!shrink">
+        <div class="user-name">{{ username || '用户' }}</div>
+        <div class="user-role">{{ userRole || '用户' }}</div>
+      </div>
     </div>
     
     <div :style="{background: bgColor}" class="ivu-shrinkable-menu">
       <slot name="top"></slot>
-      <sidebar-menu
-        v-show="!shrink"
-        :menu-theme="theme"
-        :menu-list="menuList"
-        :open-names="openNames"
-        @on-change="handleChange"
-      ></sidebar-menu>
-      <sidebar-menu-shrink
-        v-show="shrink"
-        :menu-theme="theme"
-        :menu-list="menuList"
-        :icon-color="shrinkIconColor"
-        @on-change="handleChange"
-      ></sidebar-menu-shrink>
+      <!-- 使用 Element UI 菜单组件 -->
+      <el-menu
+        :default-active="$route.name"
+        :default-openeds="openNames"
+        :collapse="shrink"
+        :unique-opened="true"
+        :background-color="bgColor"
+        :text-color="textColor"
+        :active-text-color="activeTextColor"
+        class="el-menu-vertical"
+        @select="handleChange"
+      >
+        <template v-for="item in menuList" :key="item.name">
+          <el-sub-menu v-if="item.children && item.children.length" :index="item.name">
+            <template #title>
+              <el-icon>
+                <component :is="getIcon(item.icon)" />
+              </el-icon>
+              <span>{{ item.title }}</span>
+            </template>
+            <el-menu-item 
+              v-for="child in item.children" 
+              :key="child.name" 
+              :index="child.name"
+            >
+              <el-icon>
+                <component :is="getIcon(child.icon)" />
+              </el-icon>
+              <span>{{ child.title }}</span>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-menu-item v-else :index="item.name">
+            <el-icon>
+              <component :is="getIcon(item.icon)" />
+            </el-icon>
+            <span>{{ item.title }}</span>
+          </el-menu-item>
+        </template>
+      </el-menu>
     </div>
   </div>
 </template>
 
 <script>
-import sidebarMenu from "./components/sidebar.vue";
-import sidebarMenuShrink from "./components/sidebarshrink.vue";
-import util from "@/utils/util";
+// 移除了 util 导入，避免引起错误
+import { User, Menu, Setting, Document, Location, ArrowRight } from '@element-plus/icons-vue';
+
 export default {
   name: "shrinkableMenu",
   components: {
-    sidebarMenu,
-    sidebarMenuShrink
+    User,
+    Menu,
+    Setting,
+    Document,
+    Location,
+    ArrowRight
   },
   props: {
-    shrink: {
-      type: Boolean,
-      default: false
-    },
     menuList: {
       type: Array,
       required: true
@@ -53,7 +89,8 @@ export default {
       type: String,
       default: "dark",
       validator(val) {
-        return util.oneOf(val, ["dark", "light"]);
+        // 自行实现 oneOf 方法，不依赖 util
+        return ["dark", "light"].includes(val);
       }
     },
     beforePush: {
@@ -62,19 +99,41 @@ export default {
     openNames: {
       type: Array
     },
-    // 新增属性：是否显示移动端菜单开关
+    // 是否收缩菜单
+    shrink: {
+      type: Boolean,
+      default: false
+    },
+    // 显示移动端菜单开关
     showMobileToggle: {
       type: Boolean,
       default: true
+    },
+    // 显示用户面板
+    showUserPanel: {
+      type: Boolean,
+      default: false
+    },
+    // 用户名
+    username: {
+      type: String,
+      default: ""
+    },
+    // 用户角色
+    userRole: {
+      type: String,
+      default: ""
     }
   },
   computed: {
     bgColor() {
-      return "#323232";
+      return this.theme === "dark" ? "#2b3643" : "#fff";
     },
-    /* 收缩状态下的图标颜色 */
-    shrinkIconColor() {
-      return this.theme == "dark" ? "#fff" : "#515a6e";
+    textColor() {
+      return this.theme === "dark" ? "rgba(255, 255, 255, 0.7)" : "#303133";
+    },
+    activeTextColor() {
+      return this.theme === "dark" ? "#fff" : "#409EFF";
     }
   },
   methods: {
@@ -102,6 +161,24 @@ export default {
      */
     handleMobileToggle() {
       this.$emit("on-mobile-toggle");
+    },
+
+    /**
+     * 将原有图标转换为 Element UI 图标
+     */
+    getIcon(iconName) {
+      // 简单映射一些常用的图标，实际使用时可能需要更完整的映射
+      const iconMap = {
+        'ios-person': 'User',
+        'ios-settings': 'Setting',
+        'ios-contact': 'User',
+        'ios-document': 'Document',
+        'ios-navigate': 'Location',
+        'ios-arrow-forward': 'ArrowRight',
+        'ios-menu': 'Menu'
+      };
+      
+      return iconMap[iconName] || 'Document'; // 默认返回 Document 图标
     }
   }
 };

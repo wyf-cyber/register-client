@@ -5,9 +5,11 @@ import CryptoJS from "crypto-js";
 import { loginService, updateUserNameService, updatePasswordService, deleteAccountService, updateEmailService } from "@/views/userSetting/api";
 import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
-import { Icon, Menu, Submenu, MenuItem } from "view-ui-plus";
+import { ElMenu, ElSubMenu, ElMenuItem, ElIcon } from "element-plus";
+import { User, Setting, Operation, ArrowRight, ArrowLeft } from "@element-plus/icons-vue";
+import ShrinkableMenu from "@/views/navbar/menu.vue";
 
-// Define state variables
+// 定义状态变量
 const newUsername = ref("");
 const newPassword = ref("");
 const newEmail = ref("");
@@ -22,7 +24,7 @@ const showMobileMenu = ref(false);
 const singleOpenName = ref(["user"]); // 控制菜单展开状态
 const menuTheme = ref("dark"); // 菜单主题
 
-// Sidebar menu data
+// 侧边栏菜单数据
 const menuList = ref([
   {
     name: "user",
@@ -35,7 +37,7 @@ const menuList = ref([
   },
 ]);
 
-// Menu handling
+// 菜单处理
 const handleMenuChange = (name) => {
   router.push({ name });
 };
@@ -44,7 +46,7 @@ const changeMenu = (name) => {
   handleMenuChange(name);
 };
 
-// Form validation
+// 表单验证
 const validateForm = (type) => {
   if (type === "username") {
     if (!newUsername.value) {
@@ -79,7 +81,7 @@ const validateForm = (type) => {
   return true;
 };
 
-// Confirmation handler
+// 确认操作处理
 const handleConfirm = async () => {
   if (!confirmPassword.value) {
     alert("请输入当前密码");
@@ -135,7 +137,7 @@ const handleConfirm = async () => {
   }
 };
 
-// Modal controls
+// 模态框控制
 const openModal = (type) => {
   if (!validateForm(type)) return;
   actionType.value = type;
@@ -147,7 +149,7 @@ const closeModal = () => {
   showConfirmationModal.value = false;
 };
 
-// Logout
+// 退出登录
 const handleLogout = () => {
   sessionStorage.clear();
   sessionStorage.setItem("isAuthenticated", "false");
@@ -155,7 +157,7 @@ const handleLogout = () => {
   router.push("/auth");
 };
 
-// Sidebar toggle
+// 侧边栏折叠切换
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
@@ -164,7 +166,7 @@ const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value;
 };
 
-// Set initial menu state based on route
+// 根据路由设置初始菜单状态
 onMounted(() => {
   const currentRoute = router.currentRoute.value;
   if (currentRoute.matched.length > 1) {
@@ -172,9 +174,19 @@ onMounted(() => {
   }
 });
 
-// 添加移动菜单开关的处理方法
+// 移动菜单开关处理
 const handleMobileToggle = () => {
   showMobileMenu.value = !showMobileMenu.value;
+};
+
+// 图标映射
+const iconMap = {
+  'ios-person': 'ios-person',
+  'ios-settings': 'ios-settings',
+  'ios-contact': 'ios-contact',
+  'ios-arrow-forward': 'ios-arrow-forward',
+  'ios-arrow-back': 'ios-arrow-back',
+  'ios-menu': 'ios-menu'
 };
 </script>
 
@@ -185,46 +197,30 @@ const handleMobileToggle = () => {
       <div class="layout-sider" :class="{ collapsed: isCollapsed, 'mobile-open': showMobileMenu }">
         <div class="sidebar-container">
           <div class="sidebar-shrink-button" @click="toggleCollapse">
-            <Icon :type="isCollapsed ? 'ios-arrow-forward' : 'ios-arrow-back'" />
+            <ElIcon>
+              <component :is="isCollapsed ? ArrowRight : ArrowLeft" />
+            </ElIcon>
           </div>
-          <div class="sidebar-content">
-            <div class="user-panel">
-              <div class="user-avatar">
-                <Icon type="ios-person" size="24" />
-              </div>
-              <div class="user-info" v-show="!isCollapsed">
-                <div class="user-name">{{ username }}</div>
-                <div class="user-role">用户</div>
-              </div>
+          
+          <div class="user-panel">
+            <div class="user-avatar">
+              <ElIcon><User /></ElIcon>
             </div>
-            <Menu
-              ref="sideMenu"
-              :class="{ collapsed: isCollapsed }"
-              accordion
-              :active-name="$route.name"
-              :open-names="singleOpenName"
-              :theme="menuTheme"
-              width="auto"
-              @on-select="changeMenu"
-            >
-              <template v-for="item in menuList" :key="item.name">
-                <Submenu v-if="item.children" :name="item.name">
-                  <template #title>
-                    <Icon :type="item.icon" />
-                    <span class="layout-text">{{ item.title }}</span>
-                  </template>
-                  <MenuItem v-for="child in item.children" :key="child.name" :name="child.name">
-                    <Icon :type="child.icon" />
-                    <span class="layout-text">{{ child.title }}</span>
-                  </MenuItem>
-                </Submenu>
-                <MenuItem v-else :name="item.name">
-                  <Icon :type="item.icon" />
-                  <span class="layout-text">{{ item.title }}</span>
-                </MenuItem>
-              </template>
-            </Menu>
+            <div class="user-info" v-show="!isCollapsed">
+              <div class="user-name">{{ username }}</div>
+              <div class="user-role">用户</div>
+            </div>
           </div>
+          
+          <ShrinkableMenu 
+            :shrink="isCollapsed"
+            :menu-list="menuList"
+            :theme="menuTheme"
+            :open-names="singleOpenName"
+            :show-mobile-toggle="false"
+            @on-change="changeMenu"
+            @on-mobile-toggle="handleMobileToggle"
+          />
         </div>
       </div>
       
@@ -279,6 +275,8 @@ const handleMobileToggle = () => {
 </template>
 
 <style lang="less" scoped>
+/* 恢复scoped属性，确保样式只应用于当前组件 */
+
 .layout {
   min-height: 100vh;
   display: flex;
@@ -327,54 +325,39 @@ const handleMobileToggle = () => {
       display: flex;
       flex-direction: column;
 
-      .sidebar-content {
-        height: 100%;
+      .user-panel {
+        padding: 15px;
         display: flex;
-        flex-direction: column;
-        overflow-y: auto;
+        align-items: center;
+        margin-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
         
-        .user-panel {
-          padding: 15px;
+        .user-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.1);
           display: flex;
           align-items: center;
-          margin-bottom: 10px;
-          border-bottom: 1px solid rgba(255,255,255,0.1);
-          
-          .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            margin-right: 10px;
-          }
-          
-          .user-info {
-            overflow: hidden;
-            
-            .user-name {
-              color: #fff;
-              font-weight: 500;
-              font-size: 14px;
-              white-space: nowrap;
-            }
-            
-            .user-role {
-              color: rgba(255,255,255,0.7);
-              font-size: 12px;
-            }
-          }
+          justify-content: center;
+          color: #fff;
+          margin-right: 10px;
         }
-      }
-
-      .collapsed {
-        width: 80px !important;
-
-        .layout-text {
-          display: none;
+        
+        .user-info {
+          overflow: hidden;
+          
+          .user-name {
+            color: #fff;
+            font-weight: 500;
+            font-size: 14px;
+            white-space: nowrap;
+          }
+          
+          .user-role {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+          }
         }
       }
     }
@@ -405,29 +388,6 @@ const handleMobileToggle = () => {
       overflow-y: auto;
     }
   }
-
-  .mobile-menu-toggle {
-    display: none;
-    position: fixed;
-    left: 15px;
-    top: 70px;
-    z-index: 1100;
-    background: #fff;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    
-    &:hover {
-      transform: scale(1.05);
-      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    }
-  }
 }
 
 @media screen and (max-width: 768px) {
@@ -440,25 +400,12 @@ const handleMobileToggle = () => {
         transform: translateX(0);
         width: 200px;
       }
-
-      .sidebar-container {
-        .sidebar-shrink-button {
-          width: 36px;
-          height: 36px;
-          line-height: 36px;
-          right: -18px;
-        }
-      }
     }
 
     &-main {
       margin-left: 0;
       width: 100%;
       padding: 15px;
-    }
-
-    .mobile-menu-toggle {
-      display: flex;
     }
   }
 }
@@ -599,4 +546,173 @@ button:disabled {
   padding: 8px 20px;
   font-size: 14px;
 }
+
+/* Element UI 侧边栏样式调整 */
+.el-menu-vertical:not(.el-menu--collapse) {
+  width: 200px;
+}
+
+.el-menu {
+  border-right: none;
+  height: 100%;
+}
+
+.el-menu--collapse {
+  width: 80px;
+}
+
+/* 强化图标大小控制 */
+.el-icon {
+  font-size: 18px !important;
+  width: 24px !important;
+  height: 18px !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.el-icon svg {
+  width: 18px !important;
+  height: 18px !important;
+  vertical-align: middle !important;
+}
+
+/* 统一所有菜单按钮样式 */
+.el-menu-item,
+.el-submenu__title {
+  height: 48px !important;
+  line-height: 48px !important;
+  padding: 0 24px !important;
+  position: relative;
+  cursor: pointer;
+  z-index: 1;
+  transition: all .3s ease-in-out;
+  display: flex !important;
+  align-items: center !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* 统一所有图标样式 */
+.el-menu-item .el-icon,
+.el-submenu__title .el-icon {
+  margin-right: 10px;
+  width: 24px;
+  text-align: center;
+  font-size: 18px !important;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* 统一所有文本样式 */
+.el-menu-item span,
+.el-submenu__title span {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 子菜单特殊处理 */
+.el-submenu .el-menu .el-menu-item {
+  padding-left: 43px !important;
+  background-color: #1e2732 !important;
+}
+
+/* 统一所有按钮交互效果 */
+.el-menu-item:hover,
+.el-submenu__title:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #fff !important;
+}
+
+.el-menu-item:hover .el-icon,
+.el-submenu__title:hover .el-icon {
+  color: #fff !important;
+}
+
+/* 统一激活状态 */
+.el-menu-item.is-active,
+.el-submenu.is-active > .el-submenu__title {
+  color: #fff !important;
+  background-color: rgba(0, 170, 255, 0.2) !important;
+  border-right: 3px solid #00aaff !important;
+}
+
+.el-menu-item.is-active .el-icon,
+.el-submenu.is-active > .el-submenu__title .el-icon {
+  color: #fff !important;
+}
+
+/* 折叠状态下的样式统一 */
+.el-menu--collapse .el-submenu__title span,
+.el-menu--collapse .el-menu-item span {
+  opacity: 0;
+  display: none;
+}
+
+.el-menu--collapse .el-submenu__title .el-icon,
+.el-menu--collapse .el-menu-item .el-icon {
+  margin: 0 !important;
+  width: 100% !important;
+  text-align: center;
+}
+
+/* 使用:deep()选择器专门针对箭头图标 */
+:deep(.el-sub-menu__icon-arrow) {
+  font-size: 12px !important;
+  width: 12px !important;
+  height: 12px !important;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  margin-top: -6px;
+  transition: transform .3s;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:deep(.el-sub-menu__icon-arrow svg) {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+:deep(.el-sub-menu.is-opened > .el-sub-menu__title .el-sub-menu__icon-arrow) {
+  transform: rotateZ(180deg);
+}
+
+/* 移动设备适配 */
+@media screen and (max-width: 768px) {
+  .el-submenu__title, .el-menu-item {
+    padding: 0 32px !important;
+    height: 56px !important;
+    line-height: 56px !important;
+  }
+}
+
+/* 收缩按钮样式调整 */
+.sidebar-shrink-button {
+  position: absolute;
+  right: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dedbdb;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 1001;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+}
+</style>
+
+<!-- 移除或简化下面的样式，因为我们将使用侧边栏组件自带的样式 -->
+<style>
+/* 必要的局部样式可以保留 */
 </style>
