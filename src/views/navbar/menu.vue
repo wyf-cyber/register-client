@@ -75,8 +75,7 @@
 </template>
 
 <script>
-// 移除了 util 导入，避免引起错误
-import { User, Menu, Setting, Document, Location, ArrowRight, ArrowLeft } from '@element-plus/icons-vue';
+import { User, Menu, Setting, Document, Location, Search, Star, Calendar, ArrowRight, ArrowLeft } from '@element-plus/icons-vue';
 
 export default {
   name: "shrinkableMenu",
@@ -86,6 +85,9 @@ export default {
     Setting,
     Document,
     Location,
+    Search,
+    Star,
+    Calendar,
     ArrowRight,
     ArrowLeft
   },
@@ -141,7 +143,7 @@ export default {
   },
   computed: {
     bgColor() {
-      return this.theme === "dark" ? "#2b3643" : "#fff";
+      return this.theme === "dark" ? "#2daa9e" : "#fff";
     },
     textColor() {
       return this.theme === "dark" ? "rgba(255, 255, 255, 0.7)" : "#303133";
@@ -195,6 +197,9 @@ export default {
         'ios-contact': 'User',
         'ios-document': 'Document',
         'ios-navigate': 'Location',
+        'ios-search': 'Search',
+        'ios-star': 'Star',
+        'ios-calendar': 'Calendar',
         'ios-arrow-forward': 'ArrowRight',
         'ios-arrow-back': 'ArrowLeft',
         'ios-menu': 'Menu'

@@ -25,12 +25,22 @@ const menuTheme = ref("dark"); // 菜单主题
 // 侧边栏菜单数据
 const menuList = ref([
   {
-    name: "user",
+    name: "registercenter",
+    title: "预约挂号",
+    icon: "ios-calendar",
+    children: [
+      { name: "register", title: "预约挂号", icon: "ios-navigate" },
+      { name: "evaluate", title: "医生评价", icon: "ios-search" },
+    ],
+  },
+  {
+    name: "usercenter",
     title: "用户中心",
     icon: "ios-person",
     children: [
-      { name: "settings", title: "账号设置", icon: "ios-settings" },
+      { name: "reserverecords", title: "预约记录", icon: "ios-calendar" },
       { name: "profile", title: "个人资料", icon: "ios-contact" },
+      { name: "settings", title: "账号设置", icon: "ios-settings" },
     ],
   },
 ]);
@@ -312,7 +322,8 @@ const mainContentStyle = computed(() => {
     top: 0;
     // margin-top: 60px;
     flex-shrink: 0;
-    background: #2b3643;
+    // background: #4f959d;
+    background: #2daa9e;
     transition: all 0.8s ease;
     box-shadow: 2px 0 6px rgba(0,0,0,0.1);
     position: relative;

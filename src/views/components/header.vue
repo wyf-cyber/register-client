@@ -2,13 +2,15 @@
     <div class="header">
         <div class="header-left">
             <img src="@/assets/logo.png" alt="医院logo" class="logo">
-            <h1 class="hospital-name">XX医院预约挂号系统</h1>
+            <h1 class="hospital-name">XXX医院预约挂号系统</h1>
         </div>
         <div class="header-right">
             <div class="user-info">
-                <Icon type="ios-person" size="18" />
-                <span class="username">{{ username }}</span>
-                <Icon type="ios-arrow-down" size="14" class="arrow-icon" />
+                <Icon type="ios-calendar" size="18" style="color: #fff;" />
+                <!-- example: 2025-03-17 星期一 -->
+                {{ edit_1 }}
+                <span class="date">{{ formattedDate }} 星期{{ formattedDay }}</span>
+                {{ edit_2 }}
             </div>
         </div>
     </div>
@@ -19,7 +21,18 @@
         name: "PageHeader",
         data() {
             return {
-                username: sessionStorage.getItem("UserName") || "未登录"
+                username: sessionStorage.getItem("UserName") || "未登录",
+                formattedDate: this.formatDate(new Date()),
+                formattedDay: this.getDayOfWeek(new Date())
+            }
+        },
+        methods: {
+            formatDate(date) {
+                return date.toLocaleDateString().split('/').join('-');
+            },
+            getDayOfWeek(date) {
+                const days = ['日', '一', '二', '三', '四', '五', '六'];
+                return days[date.getDay()];
             }
         }
     };
@@ -30,7 +43,8 @@
         width: 100%;
         height: 60px;
         padding: 0 20px;
-        background: linear-gradient(to right, #2b3643, #3c5a76);
+        // background: linear-gradient(to right, #2b3643, #3c5a76);
+        background: #508e95;
         box-shadow: 0 2px 10px rgba(0,0,0,.1);
         display: flex;
         justify-content: space-between;
@@ -73,7 +87,7 @@
                     background: rgba(255,255,255,0.2);
                 }
                 
-                .username {
+                .date {
                     color: #fff;
                     font-weight: 500;
                     margin: 0 6px;
