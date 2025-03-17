@@ -158,7 +158,7 @@
   display: none;
   position: fixed;
   left: 15px;
-  top: 70px;
+  top: 75px;
   z-index: 1100;
   background: #fff;
   width: 40px;
@@ -174,5 +174,29 @@
   &:hover {
     transform: scale(1.05);
     box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  }
+}
+
+/* 侧边栏收缩按钮样式 */
+.sidebar-shrink-button {
+  position: absolute;
+  right: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dedbdb;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 1001;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   }
 }

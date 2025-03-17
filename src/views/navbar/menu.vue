@@ -10,6 +10,14 @@
       <el-icon size="24"><Menu /></el-icon>
     </div>
     
+    <!-- 收缩按钮 -->
+    <div class="sidebar-shrink-button" v-if="showShrinkButton" @click="handleShrink">
+      <el-icon size="20">
+        <ArrowRight v-if="shrink" />
+        <ArrowLeft v-else />
+      </el-icon>
+    </div>
+    
     <!-- 用户面板 -->
     <div class="user-panel" v-if="showUserPanel">
       <div class="user-avatar">
@@ -68,7 +76,7 @@
 
 <script>
 // 移除了 util 导入，避免引起错误
-import { User, Menu, Setting, Document, Location, ArrowRight } from '@element-plus/icons-vue';
+import { User, Menu, Setting, Document, Location, ArrowRight, ArrowLeft } from '@element-plus/icons-vue';
 
 export default {
   name: "shrinkableMenu",
@@ -78,7 +86,8 @@ export default {
     Setting,
     Document,
     Location,
-    ArrowRight
+    ArrowRight,
+    ArrowLeft
   },
   props: {
     menuList: {
@@ -111,6 +120,11 @@ export default {
     },
     // 显示用户面板
     showUserPanel: {
+      type: Boolean,
+      default: false
+    },
+    // 显示收缩按钮
+    showShrinkButton: {
       type: Boolean,
       default: false
     },
@@ -164,6 +178,13 @@ export default {
     },
 
     /**
+     * 处理收缩按钮点击
+     */
+    handleShrink() {
+      this.$emit("on-shrink");
+    },
+
+    /**
      * 将原有图标转换为 Element UI 图标
      */
     getIcon(iconName) {
@@ -175,6 +196,7 @@ export default {
         'ios-document': 'Document',
         'ios-navigate': 'Location',
         'ios-arrow-forward': 'ArrowRight',
+        'ios-arrow-back': 'ArrowLeft',
         'ios-menu': 'Menu'
       };
       

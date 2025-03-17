@@ -5,8 +5,6 @@ import CryptoJS from "crypto-js";
 import { loginService, updateUserNameService, updatePasswordService, deleteAccountService, updateEmailService } from "@/views/userSetting/api";
 import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
-import { ElIcon } from "element-plus";
-import { User, ArrowRight, ArrowLeft } from "@element-plus/icons-vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
 
 // 定义状态变量
@@ -191,7 +189,7 @@ const iconMap = {
 
 // 添加计算属性，计算主内容区域的样式
 const mainContentStyle = computed(() => {
-  const sidebarWidth = isCollapsed.value ? 80 : 200;
+  const sidebarWidth = isCollapsed.value ? 80 : 80;  // 
   return {
     marginLeft: `${sidebarWidth}px`,
     width: `calc(100% - ${sidebarWidth}px)`
@@ -207,37 +205,24 @@ const mainContentStyle = computed(() => {
     <div class="layout-container">
       <!-- 侧边栏 -->
       <div class="layout-sider" :class="{ collapsed: isCollapsed, 'mobile-open': showMobileMenu }">
-        <div class="sidebar-container">
-          <div class="sidebar-shrink-button" @click="toggleCollapse">
-            <ElIcon>
-              <component :is="isCollapsed ? ArrowRight : ArrowLeft" />
-            </ElIcon>
-          </div>
-          
-          <div class="user-panel">
-            <div class="user-avatar">
-              <ElIcon><User /></ElIcon>
-            </div>
-            <div class="user-info" v-show="!isCollapsed">
-              <div class="user-name">{{ username }}</div>
-              <div class="user-role">用户</div>
-            </div>
-          </div>
-          
-          <ShrinkableMenu 
-            :shrink="isCollapsed"
-            :menu-list="menuList"
-            :theme="menuTheme"
-            :open-names="singleOpenName"
-            :show-mobile-toggle="false"
-            @on-change="changeMenu"
-            @on-mobile-toggle="handleMobileToggle"
-          />
-        </div>
+        <ShrinkableMenu 
+          :shrink="isCollapsed"
+          :menu-list="menuList"
+          :theme="menuTheme"
+          :open-names="singleOpenName"
+          :show-mobile-toggle="true"
+          :show-user-panel="true"
+          :show-shrink-button="true"
+          :username="username"
+          :userRole="'用户'"
+          @on-change="changeMenu"
+          @on-mobile-toggle="handleMobileToggle"
+          @on-shrink="toggleCollapse"
+        />
       </div>
       
       <!-- 页面内容 -->
-      <div class="layout-main">
+      <div class="layout-main" :style="mainContentStyle">
         <div class="content-wrapper">
           <h1>个人账号设置</h1>
           <div class="settings-container">
