@@ -1,12 +1,12 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import CryptoJS from "crypto-js";
 import { loginService, updateUserNameService, updatePasswordService, deleteAccountService, updateEmailService } from "@/views/userSetting/api";
 import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
-import { ElMenu, ElSubMenu, ElMenuItem, ElIcon } from "element-plus";
-import { User, Setting, Operation, ArrowRight, ArrowLeft } from "@element-plus/icons-vue";
+import { ElIcon } from "element-plus";
+import { User, ArrowRight, ArrowLeft } from "@element-plus/icons-vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
 
 // 定义状态变量
@@ -188,12 +188,24 @@ const iconMap = {
   'ios-arrow-back': 'ios-arrow-back',
   'ios-menu': 'ios-menu'
 };
+
+// 添加计算属性，计算主内容区域的样式
+const mainContentStyle = computed(() => {
+  const sidebarWidth = isCollapsed.value ? 80 : 200;
+  return {
+    marginLeft: `${sidebarWidth}px`,
+    width: `calc(100% - ${sidebarWidth}px)`
+  };
+});
 </script>
 
 <template>
   <div class="layout">
     <PageHeader class="layout-header" />
-    <div class="layout-content">
+    
+    <!-- 新增布局容器 -->
+    <div class="layout-container">
+      <!-- 侧边栏 -->
       <div class="layout-sider" :class="{ collapsed: isCollapsed, 'mobile-open': showMobileMenu }">
         <div class="sidebar-container">
           <div class="sidebar-shrink-button" @click="toggleCollapse">
@@ -225,7 +237,7 @@ const iconMap = {
       </div>
       
       <!-- 页面内容 -->
-      <div class="layout-main" :class="{ collapsed: isCollapsed }">
+      <div class="layout-main">
         <div class="content-wrapper">
           <h1>个人账号设置</h1>
           <div class="settings-container">
@@ -275,16 +287,17 @@ const iconMap = {
 </template>
 
 <style lang="less" scoped>
-/* 恢复scoped属性，确保样式只应用于当前组件 */
-
 .layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   width: 100%;
+  overflow-x: hidden;
+  background-color: #f5f7fa;
 
+  /* 头部 */
   &-header {
-    flex: 0 0 60px;
+    height: 60px;
     width: 100%;
     position: fixed;
     top: 0;
@@ -292,121 +305,124 @@ const iconMap = {
     right: 0;
     z-index: 1000;
   }
-
-  &-content {
-    flex: 1;
+  
+  /* 新增的容器层 */
+  &-container {
     display: flex;
-    margin-top: 60px;
-    height: calc(100vh - 60px);
-  }
-
-  &-sider {
     position: fixed;
     left: 0;
-    top: 60px;
+    right: 0;
     bottom: 0;
+    flex-direction: row;
+    margin-top: 60px;
+    height: calc(100vh - 60px);
+    width: 100%;
+    background-color: #f5f7fa;
+  }
+
+  /* 侧边栏 */
+  &-sider {
     width: 200px;
+    height: 100%;
+    top: 0;
+    // margin-top: 60px;
+    flex-shrink: 0;
     background: #2b3643;
-    z-index: 900;
-    transition: all 0.3s ease;
+    transition: all 0.8s ease;
     box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+    position: relative;
 
     &.collapsed {
       width: 80px;
     }
-
-    &.mobile-open {
-      transform: translateX(0);
-    }
-    
-    .sidebar-container {
-      position: relative;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-
-      .user-panel {
-        padding: 15px;
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        
-        .user-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.1);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-          margin-right: 10px;
-        }
-        
-        .user-info {
-          overflow: hidden;
-          
-          .user-name {
-            color: #fff;
-            font-weight: 500;
-            font-size: 14px;
-            white-space: nowrap;
-          }
-          
-          .user-role {
-            color: rgba(255,255,255,0.7);
-            font-size: 12px;
-          }
-        }
-      }
-    }
   }
 
+  /* 主内容区域 */
   &-main {
-    flex: 1;
-    margin-left: 200px;
-    transition: all 0.3s ease;
-    height: calc(100vh - 60px);
-    width: calc(100vw - 200px);
-    background: #f5f7fa;
+    flex: 1;  
     padding: 20px;
     box-sizing: border-box;
+    // margin-top: 60px;
+    height: calc(100vh - 60px);
     overflow-y: auto;
-
-    &.collapsed {
-      margin-left: 80px;
-      width: calc(100vw - 80px);
-    }
-    
-    .content-wrapper {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-      padding: 20px;
-      height: 100%;
-      overflow-y: auto;
-    }
+    background: #f5f7fa;
   }
 }
 
 @media screen and (max-width: 768px) {
   .layout {
+    &-container {
+      flex-direction: column;
+    }
+    
     &-sider {
-      transform: translateX(-200px);
-      z-index: 1000;
-
+      width: 100% !important;
+      height: auto;
+      
+      &.collapsed {
+        display: none;
+      }
+      
       &.mobile-open {
-        transform: translateX(0);
-        width: 200px;
+        display: block;
       }
     }
+  }
+}
 
-    &-main {
-      margin-left: 0;
-      width: 100%;
-      padding: 15px;
-    }
+.sidebar-shrink-button {
+  position: absolute;
+  right: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dedbdb;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 1001;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.settings-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.settings-left, .settings-right {
+  flex: 1;
+  min-width: 280px;
+}
+
+.divider {
+  width: 1px;
+  background-color: #e0e0e0;
+  margin: 0 10px;
+}
+
+@media screen and (max-width: 768px) {
+  .settings-container {
+    flex-direction: column;
+  }
+  
+  .divider {
+    display: none;
+  }
+  
+  .settings-left, .settings-right {
+    width: 100%;
   }
 }
 
@@ -545,170 +561,6 @@ button:disabled {
 .modal-actions button {
   padding: 8px 20px;
   font-size: 14px;
-}
-
-/* Element UI 侧边栏样式调整 */
-.el-menu-vertical:not(.el-menu--collapse) {
-  width: 200px;
-}
-
-.el-menu {
-  border-right: none;
-  height: 100%;
-}
-
-.el-menu--collapse {
-  width: 80px;
-}
-
-/* 强化图标大小控制 */
-.el-icon {
-  font-size: 18px !important;
-  width: 24px !important;
-  height: 18px !important;
-  display: inline-flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
-
-.el-icon svg {
-  width: 18px !important;
-  height: 18px !important;
-  vertical-align: middle !important;
-}
-
-/* 统一所有菜单按钮样式 */
-.el-menu-item,
-.el-submenu__title {
-  height: 48px !important;
-  line-height: 48px !important;
-  padding: 0 24px !important;
-  position: relative;
-  cursor: pointer;
-  z-index: 1;
-  transition: all .3s ease-in-out;
-  display: flex !important;
-  align-items: center !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-/* 统一所有图标样式 */
-.el-menu-item .el-icon,
-.el-submenu__title .el-icon {
-  margin-right: 10px;
-  width: 24px;
-  text-align: center;
-  font-size: 18px !important;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* 统一所有文本样式 */
-.el-menu-item span,
-.el-submenu__title span {
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 子菜单特殊处理 */
-.el-submenu .el-menu .el-menu-item {
-  padding-left: 43px !important;
-  background-color: #1e2732 !important;
-}
-
-/* 统一所有按钮交互效果 */
-.el-menu-item:hover,
-.el-submenu__title:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: #fff !important;
-}
-
-.el-menu-item:hover .el-icon,
-.el-submenu__title:hover .el-icon {
-  color: #fff !important;
-}
-
-/* 统一激活状态 */
-.el-menu-item.is-active,
-.el-submenu.is-active > .el-submenu__title {
-  color: #fff !important;
-  background-color: rgba(0, 170, 255, 0.2) !important;
-  border-right: 3px solid #00aaff !important;
-}
-
-.el-menu-item.is-active .el-icon,
-.el-submenu.is-active > .el-submenu__title .el-icon {
-  color: #fff !important;
-}
-
-/* 折叠状态下的样式统一 */
-.el-menu--collapse .el-submenu__title span,
-.el-menu--collapse .el-menu-item span {
-  opacity: 0;
-  display: none;
-}
-
-.el-menu--collapse .el-submenu__title .el-icon,
-.el-menu--collapse .el-menu-item .el-icon {
-  margin: 0 !important;
-  width: 100% !important;
-  text-align: center;
-}
-
-/* 使用:deep()选择器专门针对箭头图标 */
-:deep(.el-sub-menu__icon-arrow) {
-  font-size: 12px !important;
-  width: 12px !important;
-  height: 12px !important;
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  margin-top: -6px;
-  transition: transform .3s;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-:deep(.el-sub-menu__icon-arrow svg) {
-  width: 12px !important;
-  height: 12px !important;
-}
-
-:deep(.el-sub-menu.is-opened > .el-sub-menu__title .el-sub-menu__icon-arrow) {
-  transform: rotateZ(180deg);
-}
-
-/* 移动设备适配 */
-@media screen and (max-width: 768px) {
-  .el-submenu__title, .el-menu-item {
-    padding: 0 32px !important;
-    height: 56px !important;
-    line-height: 56px !important;
-  }
-}
-
-/* 收缩按钮样式调整 */
-.sidebar-shrink-button {
-  position: absolute;
-  right: -15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #dedbdb;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  z-index: 1001;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-  }
 }
 </style>
 
