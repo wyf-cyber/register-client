@@ -30,7 +30,7 @@
         width: 100%;
         height: 60px;
         padding: 0 20px;
-        background: linear-gradient(to right, #2c3e50, #3c5a76);
+        background: linear-gradient(to right, #2b3643, #3c5a76);
         box-shadow: 0 2px 10px rgba(0,0,0,.1);
         display: flex;
         justify-content: space-between;
