@@ -1,41 +1,12 @@
 <script setup>
-import { ref, onMounted, computed, inject, provide } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
-import CryptoJS from "crypto-js";
-import { loginService, updateUserNameService, updatePasswordService, deleteAccountService, updateEmailService } from "@/views/userSetting/api";
 import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
-import Messages from "@/views/components/messages.vue";
-import { ElMessage } from "element-plus";
-
-// 使用let声明，允许后续修改
-let showNotification = inject('showNotification');
-
-// 如果注入失败，使用默认实现
-if (!showNotification) {
-  console.warn('未能注入showNotification方法，将使用默认方法');
-  showNotification = (message, type) => {
-    ElMessage({
-      message,
-      type,
-      duration: 3000
-    });
-  };
-}
-
-// 使用示例
-const testMessage = () => {
-  showNotification('这是一条测试消息', 'success');
-}
+import { getUserInfoService, getUserAppointmentHistoryService } from "@/views/userinfo/api";
 
 // 定义状态变量
-const newUsername = ref("");
-const newPassword = ref("");
-const newEmail = ref("");
-const confirmPassword = ref("");
-const showConfirmationModal = ref(false);
-const actionType = ref("");
 const router = useRouter();
 const username = ref(sessionStorage.getItem("UserName") || "未登录");
 const isCollapsed = ref(sessionStorage.getItem("sidebarCollapsed") === "true" ? true : false);
@@ -43,6 +14,8 @@ const loading = ref(false);
 const showMobileMenu = ref(false);
 const singleOpenName = ref(["user"]); // 控制菜单展开状态
 const menuTheme = ref("dark"); // 菜单主题
+const email = ref(sessionStorage.getItem("Email") || "未绑定");
+const reserveRecords = ref([]);
 
 /**
  * 侧边栏菜单数据
@@ -85,118 +58,46 @@ const changeMenu = (name) => {
   handleMenuChange(name);
 };
 
-// 表单验证
-const validateForm = (type) => {
-  if (type === "username") {
-    if (!newUsername.value) {
-      showNotification("用户名不能为空", "warning");
-      return false;
-    }
-    if (newUsername.value.length < 3) {
-      showNotification("用户名长度需至少3个字符", "warning");
-      return false;
-    }
-  }
-  if (type === "password") {
-    if (!newPassword.value) {
-      showNotification("密码不能为空", "warning");
-      return false;
-    }
-    if (newPassword.value.length < 6) {
-      showNotification("密码长度需至少6个字符", "warning");
-      return false;
-    }
-  }
-  if (type === "email") {
-    if (!newEmail.value) {
-      showNotification("邮箱不能为空", "warning");
-      return false;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.value)) {
-      showNotification("请输入有效的邮箱地址", "warning");
-      return false;
-    }
-  }
-  return true;
-};
-
-// 确认操作处理
-const handleConfirm = async () => {
-  if (!confirmPassword.value) {
-    showNotification("请输入当前密码", "warning");
-    return;
-  }
+// 获取用户的预约记录
+const fetchReserveRecords = async () => {
   loading.value = true;
-  const encryptedPassword = CryptoJS.SHA256(confirmPassword.value).toString();
   try {
-    const response = await loginService(sessionStorage.getItem("UserName"), encryptedPassword);
-    if (response.success) {
-      if (actionType.value === "username") {
-        const res = await updateUserNameService(sessionStorage.getItem("UserName"), newUsername.value);
-        if (res === "Invalid username") {
-          showNotification("用户名无效或已存在", "error");
-        } else {
-          sessionStorage.setItem("UserName", newUsername.value);
-          username.value = newUsername.value;
-          showNotification("用户名修改成功！", "success");
-          closeModal();
-        }
-      } else if (actionType.value === "password") {
-        const newEncryptedPassword = CryptoJS.SHA256(newPassword.value).toString();
-        const res = await updatePasswordService(sessionStorage.getItem("UserName"), newEncryptedPassword);
-        if (res === "Invalid username") {
-          showNotification("用户名无效", "error");
-        } else {
-          showNotification("密码修改成功！", "success");
-          closeModal();
-        }
-      } else if (actionType.value === "email") {
-        const res = await updateEmailService(sessionStorage.getItem("UserName"), newEmail.value);
-        if (res === "Invalid username") {
-          showNotification("用户名无效", "error");
-        } else {
-          sessionStorage.setItem("Email", newEmail.value);
-          showNotification("邮箱绑定成功！", "success");
-          closeModal();
-        }
-      } else if (actionType.value === "delete") {
-        const res = await deleteAccountService(sessionStorage.getItem("UserName"));
-        if (res === "delete successfully") {
-          showNotification(`账号 ${sessionStorage.getItem("UserName")} 注销成功`, "success");
-          sessionStorage.clear();
-          sessionStorage.setItem("isAuthenticated", "false");
-          router.push("/login");
-        } else {
-          showNotification("账号注销失败，请重试", "error");
-        }
-      }
-    } else {
-      showNotification("当前密码错误，请重试", "error");
-    }
+    const response = await getUserAppointmentHistoryService(username.value);
+    reserveRecords.value = response || [];
   } catch (error) {
-    showNotification(`操作失败：${error.message || "未知错误"}`, "error");
+    console.error("获取预约记录出错:", error);
   } finally {
     loading.value = false;
   }
 };
 
-// 模态框控制
-const openModal = (type) => {
-  if (!validateForm(type)) return;
-  actionType.value = type;
-  showConfirmationModal.value = true;
+// 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
-const closeModal = () => {
-  confirmPassword.value = "";
-  showConfirmationModal.value = false;
+// 获取状态文本
+const getStatusText = (status) => {
+  const statusMap = {
+    'pending': '待就诊',
+    'completed': '已完成',
+    'cancelled': '已取消'
+  };
+  return statusMap[status] || status;
+};
+
+// 获取状态样式类名
+const getStatusClass = (status) => {
+  return `status-${status}`;
 };
 
 // 退出登录
 const handleLogout = () => {
   sessionStorage.clear();
   sessionStorage.setItem("isAuthenticated", "false");
-  showNotification("已退出登录", "info");
+  alert("已退出登录");
   router.push("/auth");
 };
 
@@ -211,10 +112,28 @@ const toggleMobileMenu = () => {
 };
 
 // 根据路由设置初始菜单状态
-onMounted(() => {
+onMounted(async () => {
   const currentRoute = router.currentRoute.value;
   if (currentRoute.matched.length > 1) {
     singleOpenName.value = [currentRoute.matched[0].name];
+  }
+  // 获取用户邮箱和预约记录
+  loading.value = true;
+  try {
+    // 获取用户信息（包含邮箱）
+    const userInfoResponse = await getUserInfoService(username.value);
+    if (userInfoResponse) {  // 直接检查返回的邮箱字符串
+      email.value = userInfoResponse;
+    } else {
+      email.value = '';  // 如果没有邮箱信息，设置为空字符串
+    }
+    
+    // 获取预约记录
+    await fetchReserveRecords();
+  } catch (error) {
+    console.error("加载数据出错:", error);
+  } finally {
+    loading.value = false;
   }
 });
 
@@ -246,7 +165,6 @@ const mainContentStyle = computed(() => {
 <template>
   <div class="layout">
     <PageHeader class="layout-header" />
-    <Messages />
     
     <!-- 新增布局容器 -->
     <div class="layout-container">
@@ -271,45 +189,55 @@ const mainContentStyle = computed(() => {
       <!-- 页面内容 -->
       <div class="layout-main" :style="mainContentStyle">
         <div class="content-wrapper">
-          <h1>个人账号设置</h1>
-          <div class="settings-container">
-            <div class="settings-left">
-              <h2>修改账号设置</h2>
-              <div class="form-group">
-                <label for="username">修改用户名</label>
-                <input id="username" v-model="newUsername" type="text" placeholder="输入新用户名" maxlength="20" />
-                <button @click="openModal('username')" :disabled="loading">修改用户名</button>
+          <h1>个人资料</h1>
+          
+          <!-- 上半部分：账户信息 -->
+          <div class="info-section">
+            <h2>账户信息</h2>
+            <div class="user-info-card">
+              <div class="info-item">
+                <span class="info-label">用户名：</span>
+                <span class="info-value">{{ username }}</span>
               </div>
-              <div class="form-group">
-                <label for="password">修改密码</label>
-                <input id="password" v-model="newPassword" type="password" placeholder="输入新密码" maxlength="20" />
-                <button @click="openModal('password')" :disabled="loading">修改密码</button>
-              </div>
-            </div>
-            <div class="divider"></div>
-            <div class="settings-right">
-              <div class="form-group-rightup">
-                <label for="email">绑定邮箱号</label>
-                <input id="email" v-model="newEmail" type="text" placeholder="输入新邮箱号" maxlength="40" />
-                <button @click="openModal('email')" :disabled="loading">绑定邮箱号</button>
-              </div>
-              <!-- 注销账号 -->
-              <div class="form-group-rightdown">
-                <button @click="handleLogout" class="logout-btn" :disabled="loading">退出登录</button>
-                <button @click="openModal('delete')" class="delete-btn" :disabled="loading">注销账号</button>
+              <div class="info-item">
+                <span class="info-label">绑定邮箱：</span>
+                <span class="info-value">{{ email || '暂未绑定邮箱' }}</span>
               </div>
             </div>
           </div>
-          <div v-if="showConfirmationModal" class="modal">
-            <div class="modal-content">
-              <h2>确认修改</h2>
-              <p>请输入当前密码以确认操作</p>
-              <input v-model="confirmPassword" type="password" placeholder="输入当前密码" />
-              <div class="modal-actions">
-                <button @click="handleConfirm" :disabled="loading">
-                  <CircleLoading v-if="loading" /> {{ loading ? "处理中..." : "确认" }}
-                </button>
-                <button @click="closeModal" :disabled="loading">取消</button>
+
+          <!-- 下半部分：预约挂号记录 -->
+          <div class="record-section">
+            <h2>预约挂号记录</h2>
+            <div v-if="loading" class="loading-container">
+              <CircleLoading />
+              <span>加载中...</span>
+            </div>
+            <div v-else-if="reserveRecords.length === 0" class="empty-records">
+              暂无预约挂号记录
+            </div>
+            <div v-else class="records-list">
+              <div v-for="(record, index) in reserveRecords" :key="index" class="record-item">
+                <div class="record-header">
+                  <span class="record-time">{{ formatDate(record.appointmentTime) }}</span>
+                  <span :class="['record-status', getStatusClass(record.status)]">{{ getStatusText(record.status) }}</span>
+                </div>
+                <div class="record-content">
+                  <div class="record-info">
+                    <div class="info-row">
+                      <span class="info-label">医生：</span>
+                      <span class="info-value">{{ record.doctorName }}</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">科室：</span>
+                      <span class="info-value">{{ record.department }}</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">预约时间：</span>
+                      <span class="info-value">{{ formatDate(record.appointmentTime) }} {{ record.timeSlot }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -596,4 +524,152 @@ button:disabled {
   padding: 8px 20px;
   font-size: 14px;
 }
+
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 用户信息卡片 */
+.info-section, .record-section {
+  margin-bottom: 30px;
+}
+
+.user-info-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.info-item {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.info-label {
+  font-weight: bold;
+  width: 100px;
+  color: #606266;
+}
+
+.info-value {
+  color: #303133;
+}
+
+.actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 15px;
+}
+
+.setting-btn {
+  background-color: #409EFF;
+}
+
+.setting-btn:hover {
+  background-color: #337ecc;
+}
+
+/* 挂号记录列表 */
+.records-list {
+  margin-top: 15px;
+}
+
+.record-item {
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.record-header {
+  padding: 12px 15px;
+  background-color: #f5f7fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.record-time {
+  font-weight: bold;
+  color: #303133;
+}
+
+.record-status {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-pending {
+  background-color: #e6a23c;
+  color: white;
+}
+
+.status-completed {
+  background-color: #67c23a;
+  color: white;
+}
+
+.status-cancelled {
+  background-color: #909399;
+  color: white;
+}
+
+.record-content {
+  padding: 15px;
+}
+
+.record-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+.empty-records {
+  text-align: center;
+  color: #909399;
+  padding: 30px;
+  background: white;
+  border-radius: 8px;
+}
+
+@media screen and (max-width: 768px) {
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .info-label {
+    width: auto;
+    margin-bottom: 5px;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+  
+  .actions button {
+    width: 100%;
+  }
+}
 </style>
+

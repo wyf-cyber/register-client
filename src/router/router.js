@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import login from '@/views/login/index.vue'; // 新增登录/注册页面组件
+import Login from '@/views/login/index.vue'; // 新增登录/注册页面组件
 import Settings from '@/views/userSetting/index.vue'; // 新增设置页面组件
+import Profile from '@/views/userinfo/index.vue'; // 新增个人资料页面组件
 import Error404 from '@/views/template/404.vue';
 import Error403 from '@/views/template/403.vue';
 import Error500 from '@/views/template/500.vue';
@@ -13,13 +14,19 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    component: login,
+    component: Login,
     meta: { requiresUnauth: true }  // 添加未认证标志
   },
   {
     path: '/settings',
     name: 'settings',
     component: Settings,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: Profile,
     meta: { requiresAuth: true }
   },
   {

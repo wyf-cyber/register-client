@@ -152,6 +152,13 @@ export default {
       return this.theme === "dark" ? "#fff" : "#409EFF";
     }
   },
+  data() {
+    return {
+      // 存储当前展开的菜单项
+      currentOpenedMenu: sessionStorage.getItem('openedMenuItems') ? 
+                         JSON.parse(sessionStorage.getItem('openedMenuItems')) : []
+    }
+  },
   methods: {
     /**
      * 菜单变化时触发
@@ -164,7 +171,29 @@ export default {
           willpush = false;
         }
       }
+      // 如果点击的是个人资料，则跳转到个人资料页面
+      if (name === "profile") {
+        this.$router.push({
+          name: "profile"
+        });
+      }
+      // 如果点击的是账号设置，则跳转到账号设置页面
+      if (name === "settings") {
+        this.$router.push({
+          name: "settings"
+        });
+      }
       if (willpush) {
+        // 存储当前展开的菜单项到sessionStorage
+        for (const item of this.menuList) {
+          if (item.children && item.children.some(child => child.name === name)) {
+            // 保存父菜单名称
+            this.currentOpenedMenu = [item.name];
+            sessionStorage.setItem('openedMenuItems', JSON.stringify(this.currentOpenedMenu));
+            break;
+          }
+        }
+        
         this.$router.push({
           name: name
         });
@@ -206,6 +235,21 @@ export default {
       };
       
       return iconMap[iconName] || 'Document'; // 默认返回 Document 图标
+    }
+  },
+  mounted() {
+    // 恢复展开的菜单状态
+    if (this.currentOpenedMenu.length > 0) {
+      this.$nextTick(() => {
+        // 确保菜单组件已完全加载
+        setTimeout(() => {
+          // 直接设置默认展开项，避免动画
+          const menuEl = document.querySelector('.el-menu');
+          if (menuEl && menuEl.__vue__) {
+            menuEl.__vue__.openedMenus = this.currentOpenedMenu;
+          }
+        }, 0);
+      });
     }
   }
 };

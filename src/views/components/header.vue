@@ -8,9 +8,7 @@
             <div class="user-info">
                 <Icon type="ios-calendar" size="18" style="color: #fff;" />
                 <!-- example: 2025-03-17 星期一 -->
-                {{ edit_1 }}
                 <span class="date">{{ formattedDate }} 星期{{ formattedDay }}</span>
-                {{ edit_2 }}
             </div>
         </div>
     </div>
