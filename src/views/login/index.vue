@@ -227,11 +227,23 @@ export default {
       try {
         const response = await loginService(loginForm.value.username, encryptedPassword);
         if (response.success) {
-          showNotification("登录成功！", "success");
-          sessionStorage.setItem("isAuthenticated", "true");
-          sessionStorage.setItem("UserName", loginForm.value.username);
-          router.push("/");
-          resetForms();
+          if (response.message === "admin") {
+            showNotification("登录成功！", "success");
+            sessionStorage.setItem("isAuthenticated", "true");
+            sessionStorage.setItem("UserName", loginForm.value.username);
+            sessionStorage.setItem("UserRole", "admin");
+            router.push("/");
+            resetForms();
+          } else if (response.message === "user") {
+            showNotification("登录成功！", "success");
+            sessionStorage.setItem("isAuthenticated", "true");
+            sessionStorage.setItem("UserName", loginForm.value.username);
+            sessionStorage.setItem("UserRole", "user");
+            router.push("/");
+            resetForms();
+          } else {
+            showNotification("登录失败，请重试。" + response, "error");
+          }
         } else if (response.message === "Invalid password") {
           showNotification("密码错误，请重试。", "error");
         } else if (response.message === "Invalid username") {
@@ -284,10 +296,13 @@ export default {
 
     const openModal = () => {
       showEmailModal.value = true;
+      modalUsername.value = loginForm.value.username;
+      enteredConfirmCode.value = '';
     };
 
     const closeModal = () => {
       showEmailModal.value = false;
+      modalUsername.value = '';
       enteredConfirmCode.value = '';
     };
 
@@ -307,9 +322,10 @@ export default {
       try {
         const res = await sendVerificationEmailService(modalUsername.value);
         if (res == "Invalid username") {
-          showNotification("验证邮件已发送", "success");
+          showNotification("用户名不存在，请注册", "error");
         } else {
-          showNotification("发送邮件失败：" + res, "error");
+          // 成功发送邮件
+          showNotification("验证邮件已发送，请前往邮箱查收", "success");
         }
       } catch (error) {
         showNotification("发送邮件错误：" + error.message, "error");
@@ -319,12 +335,24 @@ export default {
     async function verifyEmailCode() {
       try {
         const res = await verifyEmailCodeService(modalUsername.value, enteredConfirmCode.value);
-        if (res) {
-          showNotification("验证码验证成功，正在跳转...", "success");
-          sessionStorage.setItem("isAuthenticated", "true");
-          sessionStorage.setItem("UserName", modalUsername.value);
-          router.push("/");
-          resetForms();
+        if(res.success) {
+          if (res.message === "admin") {
+            showNotification("验证码验证成功，您是管理员，正在跳转...", "success");
+            sessionStorage.setItem("isAuthenticated", "true");
+            sessionStorage.setItem("UserName", modalUsername.value);
+            sessionStorage.setItem("UserRole", "admin");
+            router.push("/");
+            resetForms();
+          } else if (res.message === "user") {
+            showNotification("验证码验证成功，您是用户，正在跳转...", "success");
+            sessionStorage.setItem("isAuthenticated", "true");
+            sessionStorage.setItem("UserName", modalUsername.value);
+            sessionStorage.setItem("UserRole", "user");
+            router.push("/");
+            resetForms();
+          } else {
+            showNotification("验证码错误，请重试。", "error");
+          }
         } else {
           showNotification("验证码错误，请重试。", "error");
         }

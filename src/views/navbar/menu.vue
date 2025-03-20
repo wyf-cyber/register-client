@@ -138,7 +138,7 @@ export default {
     // 用户角色
     userRole: {
       type: String,
-      default: ""
+      default: "user"
     }
   },
   computed: {

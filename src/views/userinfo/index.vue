@@ -9,6 +9,7 @@ import { getUserInfoService, getUserAppointmentHistoryService } from "@/views/us
 // 定义状态变量
 const router = useRouter();
 const username = ref(sessionStorage.getItem("UserName") || "未登录");
+const userRole = ref(sessionStorage.getItem("UserRole") === "admin" ? "管理员" : "普通用户");
 const isCollapsed = ref(sessionStorage.getItem("sidebarCollapsed") === "true" ? true : false);
 const loading = ref(false);
 const showMobileMenu = ref(false);
@@ -179,7 +180,7 @@ const mainContentStyle = computed(() => {
           :show-user-panel="true"
           :show-shrink-button="true"
           :username="username"
-          :userRole="'用户'"
+          :userRole="userRole"
           @on-change="changeMenu"
           @on-mobile-toggle="handleMobileToggle"
           @on-shrink="toggleCollapse"
@@ -198,6 +199,10 @@ const mainContentStyle = computed(() => {
               <div class="info-item">
                 <span class="info-label">用户名：</span>
                 <span class="info-value">{{ username }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">用户权限：</span>
+                <span class="info-value">{{ userRole }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">绑定邮箱：</span>
