@@ -1,423 +1,420 @@
 <template>
-  <div class="page-background">
-    <div class="body">
-      <div class="main-box">
-        <div :class="['container', 'container-register', { 'is-txl': isLogin }]">
-          <form @submit.prevent="register">
-            <h2 class="title">注册</h2>
-            <input class="form__input" type="text" v-model="registerForm.username" placeholder="请输入用户名"/>
-            <input class="form__input" type="email" v-model="registerForm.email" placeholder="请输入邮箱"/>
-            <input class="form__input" type="password" v-model="registerForm.password" placeholder="请输入密码"/>
-            <input class="form__input" type="password" v-model="registerForm.confirmPassword" placeholder="请确认密码"/>
-            <div class="captcha-wrapper">
-              <!-- 如果验证码图片加载失败，或尚未加载，则显示圆形加载动画 -->
-              <img 
-                v-if="verifyCodeImgUrl" 
-                :src="verifyCodeImgUrl" 
-                alt="验证码" 
-                @click="fetchVerifyCode" 
-                @error="handleImageError"
-                class="captcha-image" 
-                title="点击图片刷新验证码"
-              />
-              <div v-else class="captcha-loading">
-                <circle-loading/>
-                <span class="reload-text" @click="fetchVerifyCode">点击重新加载</span>
+  <div class="layout">
+    <PageHeader class="layout-header" />
+    <div class="page-background">
+      <div class="body">
+        <div class="main-box">
+          <div :class="['container', 'container-register', { 'is-txl': isLogin }]">
+            <form @submit.prevent="register">
+              <h2 class="title">注册</h2>
+              <input class="form__input" type="text" v-model="registerForm.username" placeholder="请输入用户名"/>
+              <input class="form__input" type="email" v-model="registerForm.email" placeholder="请输入邮箱"/>
+              <input class="form__input" type="password" v-model="registerForm.password" placeholder="请输入密码"/>
+              <input class="form__input" type="password" v-model="registerForm.confirmPassword" placeholder="请确认密码"/>
+              <div class="captcha-wrapper">
+                <img 
+                  v-if="verifyCodeImgUrl" 
+                  :src="verifyCodeImgUrl" 
+                  alt="验证码" 
+                  @click="fetchVerifyCode" 
+                  @error="handleImageError"
+                  class="captcha-image" 
+                  title="点击图片刷新验证码"
+                />
+                <div v-else class="captcha-loading">
+                  <circle-loading/>
+                  <span class="reload-text" @click="fetchVerifyCode">点击重新加载</span>
+                </div>
+                <input 
+                  class="form__input captcha-input" 
+                  type="text" 
+                  v-model="enteredVerifyCode" 
+                  placeholder="输入验证码"
+                  maxlength="5"
+                />
               </div>
-              <input 
-                class="form__input captcha-input" 
-                type="text" 
-                v-model="enteredVerifyCode" 
-                placeholder="输入验证码"
-                maxlength="5"
-              />
-            </div>
-            <div class="form__button" @click="register">立即注册</div>
-          </form>
-        </div>
-        <div :class="['container', 'container-login', { 'is-txl is-z200': isLogin }]">
-          <form @submit.prevent="login">
-            <h2 class="title">登录</h2>
-            <input class="form__input" type="text" v-model="loginForm.username" placeholder="请输入用户名"/>
-            <input class="form__input" type="password" v-model="loginForm.password" placeholder="请输入密码"/>
-            <div class="captcha-wrapper">
-              <img 
-                v-if="verifyCodeImgUrl" 
-                :src="verifyCodeImgUrl" 
-                alt="验证码" 
-                @click="fetchVerifyCode" 
-                @error="handleImageError"
-                class="captcha-image" 
-                title="点击图片刷新验证码"
-              />
-              <div v-else class="captcha-loading">
-                <circle-loading/>
-                <span class="reload-text" @click="fetchVerifyCode">点击重新加载</span>
+              <div class="form__button" @click="register">立即注册</div>
+            </form>
+          </div>
+          <div :class="['container', 'container-login', { 'is-txl is-z200': isLogin }]">
+            <form @submit.prevent="login">
+              <h2 class="title">登录</h2>
+              <input class="form__input" type="text" v-model="loginForm.username" placeholder="请输入用户名"/>
+              <input class="form__input" type="password" v-model="loginForm.password" placeholder="请输入密码"/>
+              <div class="captcha-wrapper">
+                <img 
+                  v-if="verifyCodeImgUrl" 
+                  :src="verifyCodeImgUrl" 
+                  alt="验证码" 
+                  @click="fetchVerifyCode" 
+                  @error="handleImageError"
+                  class="captcha-image" 
+                  title="点击图片刷新验证码"
+                />
+                <div v-else class="captcha-loading">
+                  <circle-loading/>
+                  <span class="reload-text" @click="fetchVerifyCode">点击重新加载</span>
+                </div>
+                <input 
+                  class="form__input captcha-input" 
+                  type="text" 
+                  v-model="enteredVerifyCode" 
+                  placeholder="输入验证码"
+                  maxlength="5"
+                />
               </div>
-              <input 
-                class="form__input captcha-input" 
-                type="text" 
-                v-model="enteredVerifyCode" 
-                placeholder="输入验证码"
-                maxlength="5"
-              />
-            </div>
-            <div class="form__button" @click="login">立即登录</div>
-            <p class="forgot-password" @click="openModal">忘记密码？</p>
-          </form>
-        </div>
-        <div :class="['switch', { 'login': isLogin }]">
-          <div class="switch__circle"></div>
-          <div class="switch__circle switch__circle_top"></div>
-          <div class="switch__container">
-            <h2>{{ isLogin ? '您好 !' : '欢迎回来 !' }}</h2>
-            <p>
-              {{
-                isLogin
-                    ? '如果您还没有账号，请点击下方立即注册按钮进行账号注册'
-                    : '如果您已经注册过账号，请点击下方立即登录按钮进行登录'
-              }}
-            </p>
-            <div class="form__button" @click="isLogin = !isLogin">
-              {{ isLogin ? '立即注册' : '立即登录' }}
+              <div class="form__button" @click="login">立即登录</div>
+              <p class="forgot-password" @click="openModal">忘记密码？</p>
+            </form>
+          </div>
+          <div :class="['switch', { 'login': isLogin }]">
+            <div class="switch__circle"></div>
+            <div class="switch__circle switch__circle_top"></div>
+            <div class="switch__container">
+              <h2>{{ isLogin ? '您好 !' : '欢迎回来 !' }}</h2>
+              <p>
+                {{
+                  isLogin
+                      ? '如果您还没有账号，请点击下方立即注册按钮进行账号注册'
+                      : '如果您已经注册过账号，请点击下方立即登录按钮进行登录'
+                }}
+              </p>
+              <div class="form__button" @click="isLogin = !isLogin">
+                {{ isLogin ? '立即注册' : '立即登录' }}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div v-if="showEmailModal" class="email-modal">
-        <div class="modal-content">
-          <h2>邮箱验证登录</h2>
-          <form @submit.prevent="sendVerifyEmail">
-            <div class="modal-input">
-              <input type="text" v-model="modalUsername" placeholder="请输入用户名" required/>
-              <button type="submit" :disabled="!canSendEmail">发送验证邮件</button>
-            </div>
-          </form>
+        <div v-if="showEmailModal" class="email-modal">
+          <div class="modal-content">
+            <h2>邮箱验证登录</h2>
+            <form @submit.prevent="sendVerifyEmail">
+              <div class="modal-input">
+                <input type="text" v-model="modalUsername" placeholder="请输入用户名" required/>
+                <button type="submit" :disabled="!canSendEmail">发送验证邮件</button>
+              </div>
+            </form>
 
-          <form @submit.prevent="verifyEmailCode">
-            <div class="modal-input">
-              <input v-model="enteredConfirmCode" type="text" placeholder="输入验证码" required/>
-            </div>
-            <div class="modal-actions">
-              <button type="submit">确认</button>
-              <button @click="closeModal" type="button">取消</button>
-            </div>
-          </form>
+            <form @submit.prevent="verifyEmailCode">
+              <div class="modal-input">
+                <input v-model="enteredConfirmCode" type="text" placeholder="输入验证码" required/>
+              </div>
+              <div class="modal-actions">
+                <button type="submit">确认</button>
+                <button @click="closeModal" type="button">取消</button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
 
-      <div v-if="notification.show" :class="['notification', notification.type]">
-        {{ notification.message }}
+        <div v-if="notification.show" :class="['notification', notification.type]">
+          {{ notification.message }}
+        </div>
       </div>
     </div>
   </div>
 </template>
   
-<script>
+<script setup>
 import { ref, onMounted } from 'vue';
 import { loginService, registerService, sendVerificationEmailService, verifyEmailCodeService, verifyService } from '@/views/login/api';
 import { useRouter } from 'vue-router';
 import CryptoJS from 'crypto-js';
 import CircleLoading from '@/views/components/circle_loading.vue';
+import PageHeader from '@/views/components/header.vue';
 
-export default {
-  name: 'Login',
-  setup() {
-    const isLogin = ref(true);
-    const router = useRouter();
-    const loginForm = ref({
-      username: '',
-      password: '',
-    });
-    const registerForm = ref({
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    });
+const isLogin = ref(true);
+const router = useRouter();
+const loginForm = ref({
+  username: '',
+  password: '',
+});
+const registerForm = ref({
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+});
 
-    const verifyCode = ref('');
-    const verifyCodeImgUrl = ref('');
-    const enteredVerifyCode = ref('');
-    let canFetchCaptcha = true;
+const verifyCode = ref('');
+const verifyCodeImgUrl = ref('');
+const enteredVerifyCode = ref('');
+let canFetchCaptcha = true;
 
-    const showEmailModal = ref(false);
-    const modalUsername = ref('');
-    const enteredConfirmCode = ref('');
-    const canSendEmail = ref(true);
-    const lastSentTime = ref(0);
+const showEmailModal = ref(false);
+const modalUsername = ref('');
+const enteredConfirmCode = ref('');
+const canSendEmail = ref(true);
+const lastSentTime = ref(0);
 
-    const notification = ref({
-      show: false,
-      message: '',
-      type: 'info'
-    });
+const notification = ref({
+  show: false,
+  message: '',
+  type: 'info'
+});
 
-    const handleImageError = () => {
-      verifyCodeImgUrl.value = ''; // 清空图片URL触发loading状态
-      showNotification("验证码图片加载失败，请点击重试", "error");
-    };
+const handleImageError = () => {
+  verifyCodeImgUrl.value = ''; // 清空图片URL触发loading状态
+  showNotification("验证码图片加载失败，请点击重试", "error");
+};
 
-    async function fetchVerifyCode() {
-      if (!canFetchCaptcha) {
-        showNotification("请求过于频繁，请稍候再试。", "error");
-        return;
-      }
+async function fetchVerifyCode() {
+  if (!canFetchCaptcha) {
+    showNotification("请求过于频繁，请稍候再试。", "error");
+    return;
+  }
 
-      // 清空当前验证码图片，显示loading状态
-      verifyCodeImgUrl.value = '';
-      
-      canFetchCaptcha = false;
-      setTimeout(() => {
-        canFetchCaptcha = true;
-      }, 10000);
+  // 清空当前验证码图片，显示loading状态
+  verifyCodeImgUrl.value = '';
+  
+  canFetchCaptcha = false;
+  setTimeout(() => {
+    canFetchCaptcha = true;
+  }, 10000);
 
-      try {
-        const res = await verifyService();
-        if (res && res.verifyCode && res.verifyCodeImgUrl) {
-          verifyCode.value = res.verifyCode;
-          verifyCodeImgUrl.value = res.verifyCodeImgUrl;
-          enteredVerifyCode.value = ''; // 清空已输入的验证码
-        } else {
-          showNotification("获取验证码失败，请重试", "error");
-        }
-      } catch (error) {
-        showNotification("验证码请求错误：" + error.message, "error");
-      }
+  try {
+    const res = await verifyService();
+    if (res && res.verifyCode && res.verifyCodeImgUrl) {
+      verifyCode.value = res.verifyCode;
+      verifyCodeImgUrl.value = res.verifyCodeImgUrl;
+      enteredVerifyCode.value = ''; // 清空已输入的验证码
+    } else {
+      showNotification("获取验证码失败，请重试", "error");
     }
-
-    function validateInput(form, isRegistering = false) {
-      const usernamePattern = /^[a-zA-Z0-9_]{3,15}$/;
-      const captchaPattern = /^[a-zA-Z0-9]{5}$/;
-
-      if (!usernamePattern.test(isRegistering ? form.username : form.username)) {
-        showNotification("用户名不合法，请使用3-15个字母、数字或下划线。", "error");
-        return false;
-      }
-
-      if (isRegistering) {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailPattern.test(form.email)) {
-          showNotification("请输入有效的邮箱地址。", "error");
-          return false;
-        }
-      }
-
-      if (!captchaPattern.test(enteredVerifyCode.value)) {
-        showNotification("验证码格式不正确。", "error");
-        return false;
-      }
-
-      return true;
-    }
-
-    async function login() {
-      if (!validateInput(loginForm.value)) {
-        return;
-      }
-
-      const encryptedPassword = CryptoJS.SHA256(loginForm.value.password).toString();
-
-      if (enteredVerifyCode.value != verifyCode.value) {
-        showNotification("验证码错误，请重试。", "error");
-        return;
-      }
-
-      try {
-        const response = await loginService(loginForm.value.username, encryptedPassword);
-        if (response.success) {
-          if (response.message === "admin") {
-            showNotification("登录成功！", "success");
-            sessionStorage.setItem("isAuthenticated", "true");
-            sessionStorage.setItem("UserName", loginForm.value.username);
-            sessionStorage.setItem("UserRole", "admin");
-            router.push("/");
-            resetForms();
-          } else if (response.message === "user") {
-            showNotification("登录成功！", "success");
-            sessionStorage.setItem("isAuthenticated", "true");
-            sessionStorage.setItem("UserName", loginForm.value.username);
-            sessionStorage.setItem("UserRole", "user");
-            router.push("/");
-            resetForms();
-          } else {
-            showNotification("登录失败，请重试。" + response, "error");
-          }
-        } else if (response.message === "Invalid password") {
-          showNotification("密码错误，请重试。", "error");
-        } else if (response.message === "Invalid username") {
-          showNotification("用户名未找到，请注册。", "error");
-        }
-      } catch (error) {
-        showNotification("登录错误：" + error.message, "error");
-        await fetchVerifyCode();
-      }
-    }
-
-    async function register() {
-      if (!validateInput(registerForm.value, true)) {
-        return;
-      }
-
-      if (registerForm.value.password !== registerForm.value.confirmPassword) {
-        showNotification("两次输入的密码不一致", "error");
-        return;
-      }
-
-      const encryptedPassword = CryptoJS.SHA256(registerForm.value.password).toString();
-
-      if (enteredVerifyCode.value != verifyCode.value) {
-        showNotification("验证码错误，请重试。", "error");
-        return;
-      }
-
-      try {
-        const response = await registerService(
-          registerForm.value.username, 
-          encryptedPassword, 
-          registerForm.value.email
-        );
-        if (response.success) {
-          showNotification("注册成功，您可以现在登录。", "success");
-          isLogin.value = true;
-          resetForms();
-        } else if (response.message === "Username already exists") {
-          showNotification("用户名已存在，请选择另一个。", "error");
-        } else if (response.message === "Email already exists") {
-          showNotification("该邮箱已被注册。", "error");
-        } else if (response.message === "User inserting failed") {
-          showNotification("注册失败，请稍后重试", "error");
-        }
-      } catch (error) {
-        showNotification("注册错误：" + error.message, "error");
-      }
-    }
-
-    const openModal = () => {
-      showEmailModal.value = true;
-      modalUsername.value = loginForm.value.username;
-      enteredConfirmCode.value = '';
-    };
-
-    const closeModal = () => {
-      showEmailModal.value = false;
-      modalUsername.value = '';
-      enteredConfirmCode.value = '';
-    };
-
-    async function sendVerifyEmail() {
-      const currentTime = Date.now();
-      if (currentTime - lastSentTime.value < 30000) {
-        showNotification("验证邮件发送过于频繁，请稍等片刻再试。", "error");
-        return;
-      }
-
-      lastSentTime.value = currentTime;
-      canSendEmail.value = false;
-      setTimeout(() => {
-        canSendEmail.value = true;
-      }, 30000);
-
-      try {
-        const res = await sendVerificationEmailService(modalUsername.value);
-        if (res == "Invalid username") {
-          showNotification("用户名不存在，请注册", "error");
-        } else {
-          // 成功发送邮件
-          showNotification("验证邮件已发送，请前往邮箱查收", "success");
-        }
-      } catch (error) {
-        showNotification("发送邮件错误：" + error.message, "error");
-      }
-    }
-
-    async function verifyEmailCode() {
-      try {
-        const res = await verifyEmailCodeService(modalUsername.value, enteredConfirmCode.value);
-        if(res.success) {
-          if (res.message === "admin") {
-            showNotification("验证码验证成功，您是管理员，正在跳转...", "success");
-            sessionStorage.setItem("isAuthenticated", "true");
-            sessionStorage.setItem("UserName", modalUsername.value);
-            sessionStorage.setItem("UserRole", "admin");
-            router.push("/");
-            resetForms();
-          } else if (res.message === "user") {
-            showNotification("验证码验证成功，您是用户，正在跳转...", "success");
-            sessionStorage.setItem("isAuthenticated", "true");
-            sessionStorage.setItem("UserName", modalUsername.value);
-            sessionStorage.setItem("UserRole", "user");
-            router.push("/");
-            resetForms();
-          } else {
-            showNotification("验证码错误，请重试。", "error");
-          }
-        } else {
-          showNotification("验证码错误，请重试。", "error");
-        }
-      } catch (error) {
-        showNotification("验证失败：" + error.message, "error");
-      }
-    }
-
-    function resetForms() {
-      loginForm.value = {
-        username: '',
-        password: '',
-      };
-      registerForm.value = {
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-      };
-      enteredVerifyCode.value = '';
-    }
-
-    const showNotification = (message, type = 'info') => {
-      notification.value.show = true;
-      notification.value.message = message;
-      notification.value.type = type;
-      
-      setTimeout(() => {
-        notification.value.show = false;
-      }, 5000);
-    };
-
-    onMounted(fetchVerifyCode);
-
-    return {
-      isLogin,
-      loginForm,
-      registerForm,
-      verifyCodeImgUrl,
-      enteredVerifyCode,
-      showEmailModal,
-      modalUsername,
-      enteredConfirmCode,
-      canSendEmail,
-      login,
-      register,
-      fetchVerifyCode,
-      openModal,
-      closeModal,
-      sendVerifyEmail,
-      verifyEmailCode,
-      notification,
-      handleImageError,
-    };
+  } catch (error) {
+    showNotification("验证码请求错误：" + error.message, "error");
   }
 }
+
+function validateInput(form, isRegistering = false) {
+  const usernamePattern = /^[a-zA-Z0-9_]{3,15}$/;
+  const captchaPattern = /^[a-zA-Z0-9]{5}$/;
+
+  if (!usernamePattern.test(isRegistering ? form.username : form.username)) {
+    showNotification("用户名不合法，请使用3-15个字母、数字或下划线。", "error");
+    return false;
+  }
+
+  if (isRegistering) {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(form.email)) {
+      showNotification("请输入有效的邮箱地址。", "error");
+      return false;
+    }
+  }
+
+  if (!captchaPattern.test(enteredVerifyCode.value)) {
+    showNotification("验证码格式不正确。", "error");
+    return false;
+  }
+
+  return true;
+}
+
+async function login() {
+  if (!validateInput(loginForm.value)) {
+    return;
+  }
+
+  const encryptedPassword = CryptoJS.SHA256(loginForm.value.password).toString();
+
+  if (enteredVerifyCode.value != verifyCode.value) {
+    showNotification("验证码错误，请重试。", "error");
+    return;
+  }
+
+  try {
+    const response = await loginService(loginForm.value.username, encryptedPassword);
+    if (response.success) {
+      if (response.message === "admin") {
+        showNotification("登录成功！", "success");
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("UserName", loginForm.value.username);
+        sessionStorage.setItem("UserRole", "admin");
+        router.push("/");
+        resetForms();
+      } else if (response.message === "user") {
+        showNotification("登录成功！", "success");
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("UserName", loginForm.value.username);
+        sessionStorage.setItem("UserRole", "user");
+        router.push("/");
+        resetForms();
+      } else {
+        showNotification("登录失败，请重试。" + response, "error");
+      }
+    } else if (response.message === "Invalid password") {
+      showNotification("密码错误，请重试。", "error");
+    } else if (response.message === "Invalid username") {
+      showNotification("用户名未找到，请注册。", "error");
+    }
+  } catch (error) {
+    showNotification("登录错误：" + error.message, "error");
+    await fetchVerifyCode();
+  }
+}
+
+async function register() {
+  if (!validateInput(registerForm.value, true)) {
+    return;
+  }
+
+  if (registerForm.value.password !== registerForm.value.confirmPassword) {
+    showNotification("两次输入的密码不一致", "error");
+    return;
+  }
+
+  const encryptedPassword = CryptoJS.SHA256(registerForm.value.password).toString();
+
+  if (enteredVerifyCode.value != verifyCode.value) {
+    showNotification("验证码错误，请重试。", "error");
+    return;
+  }
+
+  try {
+    const response = await registerService(
+      registerForm.value.username, 
+      encryptedPassword, 
+      registerForm.value.email
+    );
+    if (response.success) {
+      showNotification("注册成功，您可以现在登录。", "success");
+      isLogin.value = true;
+      resetForms();
+    } else if (response.message === "Username already exists") {
+      showNotification("用户名已存在，请选择另一个。", "error");
+    } else if (response.message === "Email already exists") {
+      showNotification("该邮箱已被注册。", "error");
+    } else if (response.message === "User inserting failed") {
+      showNotification("注册失败，请稍后重试", "error");
+    }
+  } catch (error) {
+    showNotification("注册错误：" + error.message, "error");
+  }
+}
+
+const openModal = () => {
+  showEmailModal.value = true;
+  modalUsername.value = loginForm.value.username;
+  enteredConfirmCode.value = '';
+};
+
+const closeModal = () => {
+  showEmailModal.value = false;
+  modalUsername.value = '';
+  enteredConfirmCode.value = '';
+};
+
+async function sendVerifyEmail() {
+  const currentTime = Date.now();
+  if (currentTime - lastSentTime.value < 30000) {
+    showNotification("验证邮件发送过于频繁，请稍等片刻再试。", "error");
+    return;
+  }
+
+  lastSentTime.value = currentTime;
+  canSendEmail.value = false;
+  setTimeout(() => {
+    canSendEmail.value = true;
+  }, 30000);
+
+  try {
+    const res = await sendVerificationEmailService(modalUsername.value);
+    if (res == "Invalid username") {
+      showNotification("用户名不存在，请注册", "error");
+    } else {
+      // 成功发送邮件
+      showNotification("验证邮件已发送，请前往邮箱查收", "success");
+    }
+  } catch (error) {
+    showNotification("发送邮件错误：" + error.message, "error");
+  }
+}
+
+async function verifyEmailCode() {
+  try {
+    const res = await verifyEmailCodeService(modalUsername.value, enteredConfirmCode.value);
+    if(res.success) {
+      if (res.message === "admin") {
+        showNotification("验证码验证成功，您是管理员，正在跳转...", "success");
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("UserName", modalUsername.value);
+        sessionStorage.setItem("UserRole", "admin");
+        router.push("/");
+        resetForms();
+      } else if (res.message === "user") {
+        showNotification("验证码验证成功，您是用户，正在跳转...", "success");
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("UserName", modalUsername.value);
+        sessionStorage.setItem("UserRole", "user");
+        router.push("/");
+        resetForms();
+      } else {
+        showNotification("验证码错误，请重试。", "error");
+      }
+    } else {
+      showNotification("验证码错误，请重试。", "error");
+    }
+  } catch (error) {
+    showNotification("验证失败：" + error.message, "error");
+  }
+}
+
+function resetForms() {
+  loginForm.value = {
+    username: '',
+    password: '',
+  };
+  registerForm.value = {
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  };
+  enteredVerifyCode.value = '';
+}
+
+const showNotification = (message, type = 'info') => {
+  notification.value.show = true;
+  notification.value.message = message;
+  notification.value.type = type;
+  
+  setTimeout(() => {
+    notification.value.show = false;
+  }, 5000);
+};
+
+onMounted(fetchVerifyCode);
 </script>
   
-<style lang="scss" scoped>
+<style lang="less" scoped>
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
+  background-color: #f5f7fa;
+
+  &-header {
+    height: 60px;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+  }
+}
+
 .page-background {
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - 60px);
   position: fixed;
-  top: 0;
+  top: 60px;
   left: 0;
+  display: flex;
   background-image: url('@/assets/images/background.png');
   background-size: cover;
   background-position: center;
@@ -426,9 +423,10 @@ export default {
 }
 
 .body {
-  position: static;
+  position: relative;
   width: 100%;
-  height: 100vh;
+  margin-top: 0;
+  height: 100%;
   display: flex;   
   justify-content: center;
   align-items: center;
