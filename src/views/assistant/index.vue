@@ -1,4 +1,4 @@
-<!-- 挂号流量图形化统计页面 -->
+<!-- AI问诊助手页面，仿照主流AI页面提供AI对话服务，不提供选择AI对话记录的功能 -->
 <script setup>
 import { ref, onMounted, computed, reactive, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
@@ -402,6 +402,92 @@ onUnmounted(() => {
     trendChart.dispose();
   }
 });
+
+// AI聊天相关状态
+const chatHistory = ref([
+  { role: 'assistant', content: '您好！我是您的AI问诊助手。请问有什么健康问题需要咨询？' }
+]);
+const userInput = ref('');
+const isTyping = ref(false);
+const messageRef = ref(null);
+
+// 发送消息
+const sendMessage = async () => {
+  if (!userInput.value.trim()) return;
+  
+  // 添加用户消息到聊天历史
+  chatHistory.value.push({
+    role: 'user',
+    content: userInput.value
+  });
+  
+  // 清空输入框
+  const userMessage = userInput.value;
+  userInput.value = '';
+  
+  // 显示AI正在输入状态
+  isTyping.value = true;
+  
+  // 模拟AI响应（实际项目中替换为API调用）
+  setTimeout(() => {
+    // 这里应该是调用后端API获取AI响应
+    const aiResponse = getAIResponse(userMessage);
+    
+    // 添加AI响应到聊天历史
+    chatHistory.value.push({
+      role: 'assistant',
+      content: aiResponse
+    });
+    
+    isTyping.value = false;
+    
+    // 滚动到最新消息
+    scrollToBottom();
+  }, 1000);
+};
+
+// 模拟AI响应（实际项目中应替换为API调用）
+const getAIResponse = (message) => {
+  const responses = [
+    '根据您的描述，这可能是季节性过敏的症状，建议您避免接触过敏原并咨询专科医生。',
+    '您的症状可能与多种因素有关，建议进行详细的体检和血液检查以确定具体原因。',
+    '这听起来可能是轻度的肠胃炎症，建议您多喝水，注意饮食清淡，如症状加重请及时就医。',
+    '从您描述的情况来看，可能是普通感冒，建议您多休息，多喝水，如果症状持续超过一周请咨询医生。',
+    '这些症状可能与压力和疲劳有关，建议您合理安排休息时间，保持良好的作息习惯。',
+    '您描述的情况需要进一步诊断，建议您预约相关科室的专科医生进行面诊。'
+  ];
+  
+  return responses[Math.floor(Math.random() * responses.length)];
+};
+
+// 处理输入框回车事件
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+};
+
+// 滚动到最新消息
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messageRef.value) {
+      messageRef.value.scrollTop = messageRef.value.scrollHeight;
+    }
+  });
+};
+
+// 清空聊天历史
+const clearChat = () => {
+  chatHistory.value = [
+    { role: 'assistant', content: '您好！我是您的AI问诊助手。请问有什么健康问题需要咨询？' }
+  ];
+};
+
+// 组件挂载后滚动到底部
+onMounted(() => {
+  scrollToBottom();
+});
 </script>
 
 <template>
@@ -430,95 +516,65 @@ onUnmounted(() => {
       
       <!-- 页面内容 -->
       <div class="layout-main" :style="mainContentStyle">
-        <div class="content-wrapper">
-          <h1>挂号流量统计</h1>
-          
-          <!-- 日期选择器 -->
-          <div class="date-filter">
-            <div class="filter-item">
-              <label>开始日期：</label>
-              <input type="date" v-model="dateRange.startDate" @change="handleDateRangeChange" />
-            </div>
-            <div class="filter-item">
-              <label>结束日期：</label>
-              <input type="date" v-model="dateRange.endDate" @change="handleDateRangeChange" />
-            </div>
+        <div class="ai-chat-container">
+          <div class="chat-header">
+            <h1>AI问诊助手</h1>
+            <p class="chat-description">
+              您的专业医疗咨询助手，为您解答健康问题，提供初步建议。请注意：AI建议不能替代专业医生的诊断。
+            </p>
           </div>
           
-          <!-- 加载中提示 -->
-          <div v-if="loading" class="loading-container">
-            <CircleLoading />
-            <span>加载中...</span>
-          </div>
-          
-          <div v-else>
-            <!-- 数据概览卡片 -->
-            <div class="stats-overview">
-              <div class="stat-card">
-                <div class="stat-icon">
-                  <i class="ivu-icon ios-people"></i>
-                </div>
-                <div class="stat-content">
-                  <div class="stat-title">系统用户总数</div>
-                  <div class="stat-value">{{ chartData.userCount }}</div>
+          <!-- 对话区域 -->
+          <div class="chat-messages" ref="messageRef">
+            <div 
+              v-for="(message, index) in chatHistory" 
+              :key="index" 
+              :class="['message', message.role === 'user' ? 'user-message' : 'assistant-message']"
+            >
+              <div class="message-avatar">
+                <div class="avatar-icon">
+                  <i :class="['ivu-icon', message.role === 'user' ? 'ios-person' : 'ios-medical']"></i>
                 </div>
               </div>
-              
-              <div class="stat-card">
-                <div class="stat-icon">
-                  <i class="ivu-icon ios-calendar"></i>
-                </div>
-                <div class="stat-content">
-                  <div class="stat-title">今日新增预约数</div>
-                  <div class="stat-value">{{ chartData.appointmentCounts[0] || 0 }}</div>
-                </div>
-              </div>
-              
-              <div class="stat-card">
-                <div class="stat-icon">
-                  <i class="ivu-icon ios-trending-up"></i>
-                </div>
-                <div class="stat-content">
-                  <div class="stat-title">未来7天预约总数</div>
-                  <div class="stat-value">{{ chartData.appointmentCounts.reduce((sum, count) => sum + count, 0) }}</div>
-                </div>
+              <div class="message-content">
+                <div class="message-sender">{{ message.role === 'user' ? '我' : 'AI问诊助手' }}</div>
+                <div class="message-text">{{ message.content }}</div>
               </div>
             </div>
             
-            <!-- 图表区域 -->
-            <div class="charts-container">
-              <!-- 科室统计图表 -->
-              <div class="chart-wrapper">
-                <div ref="departmentChartRef" class="chart"></div>
-              </div>
-              
-              <!-- 预约趋势图表 -->
-              <div class="chart-wrapper">
-                <div ref="trendChartRef" class="chart"></div>
+            <!-- AI正在输入提示 -->
+            <div v-if="isTyping" class="typing-indicator">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <span>AI助手正在思考...</span>
+            </div>
+          </div>
+          
+          <!-- 输入区域 -->
+          <div class="chat-input-container">
+            <div class="input-wrapper">
+              <textarea 
+                v-model="userInput" 
+                class="chat-input" 
+                placeholder="请描述您的健康问题..."
+                @keydown="handleKeyDown"
+                rows="3"
+              ></textarea>
+              <div class="input-actions">
+                <button @click="clearChat" class="clear-btn" title="清空对话">
+                  <i class="ivu-icon ios-trash"></i>
+                </button>
+                <button @click="sendMessage" class="send-btn" :disabled="!userInput.trim() || isTyping">
+                  <i class="ivu-icon ios-send"></i> 发送
+                </button>
               </div>
             </div>
-            
-            <!-- 未来7天预约数量预测 -->
-            <div class="forecast-section">
-              <h2>未来7天预约数量预测</h2>
-              <div class="forecast-bars">
-                <div 
-                  v-for="(count, index) in chartData.appointmentCounts" 
-                  :key="index" 
-                  class="forecast-bar-item"
-                >
-                  <div class="day-label">第{{ index + 1 }}天</div>
-                  <div class="bar-container">
-                    <div 
-                      class="bar" 
-                      :style="{ height: `${Math.max(count * 5, 20)}px` }"
-                    >
-                      <span class="bar-value">{{ count }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          </div>
+          
+          <!-- 免责声明 -->
+          <div class="disclaimer">
+            <p>免责声明：AI问诊助手提供的建议仅供参考，不构成医疗诊断。如有健康问题，请咨询专业医生。</p>
           </div>
         </div>
       </div>
@@ -1123,6 +1179,252 @@ button:disabled {
   
   .forecast-bar-item {
     min-width: 60px;
+  }
+}
+
+/* AI聊天界面样式 */
+.ai-chat-container {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.chat-header {
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: center;
+}
+
+.chat-header h1 {
+  margin-bottom: 10px;
+  color: #2daa9e;
+  font-size: 24px;
+}
+
+.chat-description {
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: calc(100% - 240px);
+  min-height: 300px;
+}
+
+.message {
+  display: flex;
+  margin-bottom: 16px;
+  max-width: 80%;
+}
+
+.user-message {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.assistant-message {
+  align-self: flex-start;
+}
+
+.message-avatar {
+  margin: 0 12px;
+}
+
+.avatar-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.user-message .avatar-icon {
+  background-color: #409EFF;
+  color: white;
+}
+
+.assistant-message .avatar-icon {
+  background-color: #2daa9e;
+  color: white;
+}
+
+.message-content {
+  background: #f7f7f7;
+  padding: 12px 16px;
+  border-radius: 12px;
+  position: relative;
+}
+
+.user-message .message-content {
+  background: #ecf5ff;
+  border-radius: 12px 12px 0 12px;
+}
+
+.assistant-message .message-content {
+  background: #f0f9eb;
+  border-radius: 12px 12px 12px 0;
+}
+
+.message-sender {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #303133;
+  font-size: 14px;
+}
+
+.message-text {
+  color: #606266;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 12px;
+  width: fit-content;
+  margin-left: 64px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  background: #2daa9e;
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: typingAnimation 1s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingAnimation {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+.chat-input-container {
+  padding: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.chat-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  resize: none;
+  outline: none;
+  padding: 8px;
+  font-size: 16px;
+  color: #606266;
+  font-family: inherit;
+}
+
+.input-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.send-btn, .clear-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.send-btn {
+  background: #2daa9e;
+  color: white;
+  border: none;
+}
+
+.send-btn:hover {
+  background: #258f85;
+}
+
+.send-btn:disabled {
+  background: #a0cfca;
+  cursor: not-allowed;
+}
+
+.clear-btn {
+  background: transparent;
+  color: #909399;
+  border: none;
+}
+
+.clear-btn:hover {
+  color: #606266;
+}
+
+.disclaimer {
+  padding: 12px 20px;
+  background: #fdf6ec;
+  border-top: 1px solid #faecd8;
+  font-size: 12px;
+  color: #e6a23c;
+  text-align: center;
+}
+
+@media screen and (max-width: 768px) {
+  .message {
+    max-width: 90%;
+  }
+  
+  .chat-messages {
+    height: calc(100% - 220px);
+    min-height: 200px;
+  }
+  
+  .avatar-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  
+  .input-actions {
+    flex-direction: row;
   }
 }
 </style>

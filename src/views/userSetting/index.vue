@@ -92,6 +92,14 @@ const userMenuList = ref([
       { name: "settings", title: "账号设置", icon: "ios-settings" },
     ],
   },
+  {
+    name: "assistant",
+    title: "AI问诊助手",
+    icon: "ios-chatbubble",
+    children: [
+      { name: "assistant", title: "AI问诊助手", icon: "ios-chatbubble" },
+    ],
+  },
 ]);
 
 // 根据用户角色选择菜单类型

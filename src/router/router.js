@@ -3,6 +3,7 @@ import Login from '@/views/login/index.vue'; // 新增登录/注册页面组件
 import Settings from '@/views/userSetting/index.vue'; // 新增设置页面组件
 import Profile from '@/views/userinfo/index.vue'; // 新增个人资料页面组件
 import TrafficView from '@/views/trafficView/index.vue'; // 新增挂号流量统计页面组件
+import Assistant from '@/views/assistant/index.vue'; // 新增AI问诊助手页面组件
 import Error404 from '@/views/template/404.vue';
 import Error403 from '@/views/template/403.vue';
 import Error500 from '@/views/template/500.vue';
@@ -35,6 +36,12 @@ const routes = [
     name: 'trafficView',
     component: TrafficView,
     meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/assistant',
+    name: 'assistant',
+    component: Assistant,
+    meta: { requiresAuth: true }
   },
   {
     path: '/403',

@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import { User, Menu, Setting, Document, Location, Search, Star, Calendar, ArrowRight, ArrowLeft } from '@element-plus/icons-vue';
+import { User, Menu, Setting, Document, Location, Search, Star, Calendar, ArrowRight, ArrowLeft, ChatDotRound } from '@element-plus/icons-vue';
 
 export default {
   name: "shrinkableMenu",
@@ -89,7 +89,8 @@ export default {
     Star,
     Calendar,
     ArrowRight,
-    ArrowLeft
+    ArrowLeft,
+    ChatDotRound
   },
   props: {
     menuList: {
@@ -188,6 +189,12 @@ export default {
       if (name === "trafficView") {
         this.$router.push({
           name: "trafficView"
+        });
+      }
+      // 如果点击的是AI问诊助手，则跳转到AI问诊助手页面
+      if (name === "assistant") {
+        this.$router.push({
+          name: "assistant"
         });
       }
       // 如果点击的页面未知（未在菜单列表中），跳转至404页面
