@@ -1,17 +1,20 @@
+<!-- 挂号流量图形化统计页面 -->
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, reactive, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
 import { getUserInfoService, getUserAppointmentHistoryService } from "@/views/userinfo/api";
+import { getDepartmentStatsService, getAppointmentTrendService, countSystemUsersService, countSystemAppointmentsService } from "@/views/trafficView/api";
+import * as echarts from 'echarts';
 
 // 定义状态变量
 const router = useRouter();
 const username = ref(sessionStorage.getItem("UserName") || "未登录");
 const userRole = ref(sessionStorage.getItem("UserRole") === "admin" ? "管理员" : "普通用户");
 const isCollapsed = ref(sessionStorage.getItem("sidebarCollapsed") === "true" ? true : false);
-const loading = ref(false);
+const loading = ref(true);
 const showMobileMenu = ref(false);
 const singleOpenName = ref(["user"]); // 控制菜单展开状态
 const menuTheme = ref("dark"); // 菜单主题
@@ -28,7 +31,7 @@ const reserveRecords = ref([]);
  */
 
 
-const adminMenuList = ref([
+ const adminMenuList = ref([
   {
     name: "adminbusinesscenter",
     title: "用户流量统计",
@@ -184,6 +187,213 @@ const mainContentStyle = computed(() => {
     width: `calc(100% - ${sidebarWidth}px)`
   };
 });
+
+// 定义图表数据
+const chartData = reactive({
+  departmentStats: [],
+  appointmentTrend: [],
+  userCount: 0,
+  appointmentCounts: []
+});
+
+const dateRange = reactive({
+  startDate: formatDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)), // 默认30天前
+  endDate: formatDate(new Date())
+});
+
+// 图表实例
+const departmentChartRef = ref(null);
+const trendChartRef = ref(null);
+let departmentChart = null;
+let trendChart = null;
+
+// 获取统计数据
+const fetchStatisticsData = async () => {
+  loading.value = true;
+  try {
+    // 获取科室统计数据
+    const deptStats = await getDepartmentStatsService(dateRange.startDate, dateRange.endDate);
+    chartData.departmentStats = deptStats || [];
+    
+    // 获取预约趋势数据
+    const trendData = await getAppointmentTrendService(dateRange.startDate, dateRange.endDate);
+    chartData.appointmentTrend = trendData || [];
+    
+    // 获取用户总数
+    const userCountResponse = await countSystemUsersService();
+    chartData.userCount = userCountResponse || 0;
+    
+    // 获取未来7天预约数量
+    const appointmentCountsResponse = await countSystemAppointmentsService(formatDate(new Date()));
+    chartData.appointmentCounts = appointmentCountsResponse || [];
+    
+    // 初始化图表
+    initCharts();
+  } catch (error) {
+    console.error("获取统计数据出错:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 初始化图表
+const initCharts = () => {
+  nextTick(() => {
+    // 初始化科室统计图表
+    if (departmentChartRef.value) {
+      departmentChart = echarts.init(departmentChartRef.value);
+      const departmentNames = chartData.departmentStats.map(item => item.department);
+      const appointmentCounts = chartData.departmentStats.map(item => item.count);
+      
+      departmentChart.setOption({
+        title: {
+          text: '各科室预约数量统计',
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        legend: {
+          orient: 'vertical',
+          left: 'left',
+          data: departmentNames
+        },
+        series: [
+          {
+            name: '预约数量',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: '#fff',
+              borderWidth: 2
+            },
+            label: {
+              show: false,
+              position: 'center'
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: '18',
+                fontWeight: 'bold'
+              }
+            },
+            labelLine: {
+              show: false
+            },
+            data: departmentNames.map((name, index) => {
+              return {
+                value: appointmentCounts[index],
+                name: name
+              };
+            })
+          }
+        ]
+      });
+    }
+    
+    // 初始化预约趋势图表
+    if (trendChartRef.value) {
+      trendChart = echarts.init(trendChartRef.value);
+      const dates = chartData.appointmentTrend.map(item => item.date);
+      const counts = chartData.appointmentTrend.map(item => item.count);
+      
+      trendChart.setOption({
+        title: {
+          text: '预约趋势统计',
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
+          }
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: dates,
+          axisLabel: {
+            rotate: 45
+          }
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            name: '预约数量',
+            type: 'line',
+            smooth: true,
+            data: counts,
+            itemStyle: {
+              color: '#2daa9e'
+            },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [
+                  {
+                    offset: 0,
+                    color: 'rgba(45, 170, 158, 0.8)'
+                  },
+                  {
+                    offset: 1,
+                    color: 'rgba(45, 170, 158, 0.1)'
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      });
+    }
+  });
+};
+
+// 处理日期范围变化
+const handleDateRangeChange = () => {
+  fetchStatisticsData();
+};
+
+// 窗口大小变化时重新调整图表大小
+const handleResize = () => {
+  if (departmentChart) {
+    departmentChart.resize();
+  }
+  if (trendChart) {
+    trendChart.resize();
+  }
+};
+
+// 组件挂载时获取数据
+onMounted(async () => {
+  await fetchStatisticsData();
+  window.addEventListener('resize', handleResize);
+});
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  if (departmentChart) {
+    departmentChart.dispose();
+  }
+  if (trendChart) {
+    trendChart.dispose();
+  }
+});
 </script>
 
 <template>
@@ -213,56 +423,89 @@ const mainContentStyle = computed(() => {
       <!-- 页面内容 -->
       <div class="layout-main" :style="mainContentStyle">
         <div class="content-wrapper">
-          <h1>个人资料</h1>
+          <h1>挂号流量统计</h1>
           
-          <!-- 上半部分：账户信息 -->
-          <div class="info-section">
-            <h2>账户信息</h2>
-            <div class="user-info-card">
-              <div class="info-item">
-                <span class="info-label">用户名：</span>
-                <span class="info-value">{{ username }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">用户权限：</span>
-                <span class="info-value">{{ userRole }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">绑定邮箱：</span>
-                <span class="info-value">{{ email || '暂未绑定邮箱' }}</span>
-              </div>
+          <!-- 日期选择器 -->
+          <div class="date-filter">
+            <div class="filter-item">
+              <label>开始日期：</label>
+              <input type="date" v-model="dateRange.startDate" @change="handleDateRangeChange" />
+            </div>
+            <div class="filter-item">
+              <label>结束日期：</label>
+              <input type="date" v-model="dateRange.endDate" @change="handleDateRangeChange" />
             </div>
           </div>
-
-          <!-- 下半部分：预约挂号记录 -->
-          <div class="record-section">
-            <h2>预约挂号记录</h2>
-            <div v-if="loading" class="loading-container">
-              <CircleLoading />
-              <span>加载中...</span>
-            </div>
-            <div v-else-if="reserveRecords.length === 0" class="empty-records">
-              暂无预约挂号记录
-            </div>
-            <div v-else class="records-list">
-              <div v-for="(record, index) in reserveRecords" :key="index" class="record-item">
-                <div class="record-header">
-                  <span class="record-time">{{ formatDate(record.appointmentTime) }}</span>
-                  <span :class="['record-status', getStatusClass(record.status)]">{{ getStatusText(record.status) }}</span>
+          
+          <!-- 加载中提示 -->
+          <div v-if="loading" class="loading-container">
+            <CircleLoading />
+            <span>加载中...</span>
+          </div>
+          
+          <div v-else>
+            <!-- 数据概览卡片 -->
+            <div class="stats-overview">
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="ivu-icon ios-people"></i>
                 </div>
-                <div class="record-content">
-                  <div class="record-info">
-                    <div class="info-row">
-                      <span class="info-label">医生：</span>
-                      <span class="info-value">{{ record.doctorName }}</span>
-                    </div>
-                    <div class="info-row">
-                      <span class="info-label">科室：</span>
-                      <span class="info-value">{{ record.department }}</span>
-                    </div>
-                    <div class="info-row">
-                      <span class="info-label">预约时间：</span>
-                      <span class="info-value">{{ formatDate(record.appointmentTime) }} {{ record.timeSlot }}</span>
+                <div class="stat-content">
+                  <div class="stat-title">系统用户总数</div>
+                  <div class="stat-value">{{ chartData.userCount }}</div>
+                </div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="ivu-icon ios-calendar"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-title">今日新增预约数</div>
+                  <div class="stat-value">{{ chartData.appointmentCounts[0] || 0 }}</div>
+                </div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="ivu-icon ios-trending-up"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-title">未来7天预约总数</div>
+                  <div class="stat-value">{{ chartData.appointmentCounts.reduce((sum, count) => sum + count, 0) }}</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 图表区域 -->
+            <div class="charts-container">
+              <!-- 科室统计图表 -->
+              <div class="chart-wrapper">
+                <div ref="departmentChartRef" class="chart"></div>
+              </div>
+              
+              <!-- 预约趋势图表 -->
+              <div class="chart-wrapper">
+                <div ref="trendChartRef" class="chart"></div>
+              </div>
+            </div>
+            
+            <!-- 未来7天预约数量预测 -->
+            <div class="forecast-section">
+              <h2>未来7天预约数量预测</h2>
+              <div class="forecast-bars">
+                <div 
+                  v-for="(count, index) in chartData.appointmentCounts" 
+                  :key="index" 
+                  class="forecast-bar-item"
+                >
+                  <div class="day-label">第{{ index + 1 }}天</div>
+                  <div class="bar-container">
+                    <div 
+                      class="bar" 
+                      :style="{ height: `${Math.max(count * 5, 20)}px` }"
+                    >
+                      <span class="bar-value">{{ count }}</span>
                     </div>
                   </div>
                 </div>
@@ -426,7 +669,7 @@ h1 {
 
 h2 {
   font-size: 20px;
-  margin-bottom: 20px;
+  margin: 30px 0 20px;
   font-weight: bold;
 }
 
@@ -669,7 +912,7 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px;
+  padding: 50px;
 }
 
 .empty-records {
@@ -697,6 +940,181 @@ button:disabled {
   
   .actions button {
     width: 100%;
+  }
+}
+
+.date-filter {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 30px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-item label {
+  width: 150px;
+  font-weight: bold;
+}
+
+.filter-item input {
+  padding: 8px 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* 数据概览卡片 */
+.stats-overview {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 200px;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: transform 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #2daa9e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-title {
+  color: #606266;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  color: #303133;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* 图表容器 */
+.charts-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.chart-wrapper {
+  flex: 1;
+  min-width: 300px;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.chart {
+  width: 100%;
+  height: 400px;
+}
+
+/* 预测部分 */
+.forecast-section {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.forecast-bars {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 200px;
+  padding: 20px 0;
+}
+
+.forecast-bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 60px;
+}
+
+.day-label {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #606266;
+}
+
+.bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 150px;
+}
+
+.bar {
+  width: 40px;
+  background: linear-gradient(to top, #2daa9e, #4ecdc4);
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.bar-value {
+  position: absolute;
+  top: -25px;
+  font-weight: bold;
+  color: #303133;
+}
+
+@media screen and (max-width: 768px) {
+  .stats-overview {
+    flex-direction: column;
+  }
+  
+  .charts-container {
+    flex-direction: column;
+  }
+  
+  .forecast-bars {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 20px;
+  }
+  
+  .forecast-bar-item {
+    min-width: 60px;
   }
 }
 </style>

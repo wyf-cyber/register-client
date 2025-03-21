@@ -166,6 +166,7 @@ export default {
      */
     handleChange(name) {
       let willpush = true;
+      // 如果 beforePush 存在，则调用 beforePush 方法
       if (this.beforePush !== undefined) {
         if (!this.beforePush(name)) {
           willpush = false;
@@ -183,6 +184,19 @@ export default {
           name: "settings"
         });
       }
+      // 如果点击的是挂号流量统计，则跳转到挂号流量统计页面
+      if (name === "trafficView") {
+        this.$router.push({
+          name: "trafficView"
+        });
+      }
+      // 如果点击的页面未知（未在菜单列表中），跳转至404页面
+      if (true) {
+        this.$router.push({
+          name: "error404"
+        });
+      }
+      
       if (willpush) {
         // 存储当前展开的菜单项到sessionStorage
         for (const item of this.menuList) {

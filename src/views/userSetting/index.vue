@@ -24,11 +24,6 @@ if (!showNotification) {
   };
 }
 
-// 使用示例
-const testMessage = () => {
-  showNotification('这是一条测试消息', 'success');
-}
-
 // 定义状态变量
 const newUsername = ref("");
 const newPassword = ref("");
@@ -55,7 +50,29 @@ const menuTheme = ref("dark"); // 菜单主题
  * @open-names 当前展开的菜单名称，有展开效果
  */
 
-const menuList = ref([
+// 管理员菜单列表
+const adminMenuList = ref([
+  {
+    name: "adminbusinesscenter",
+    title: "用户流量统计",
+    icon: "ios-document",
+    children: [
+      { name: "trafficView", title: "用户流量统计", icon: "ios-document" },
+    ],
+  },
+  {
+    name: "adminusercenter",
+    title: "用户中心",
+    icon: "ios-person",
+    children: [
+      { name: "profile", title: "个人资料", icon: "ios-person" },
+      { name: "settings", title: "账号设置", icon: "ios-settings" },
+    ],
+  },
+]);
+
+// 用户菜单列表
+const userMenuList = ref([
   {
     name: "registercenter",
     title: "预约挂号",
@@ -76,6 +93,9 @@ const menuList = ref([
     ],
   },
 ]);
+
+// 根据用户角色选择菜单类型
+const menuList = ref(userRole.value === "管理员" ? adminMenuList.value : userMenuList.value);
 
 // 菜单处理
 const handleMenuChange = (name) => {
@@ -198,7 +218,7 @@ const handleLogout = () => {
   sessionStorage.clear();
   sessionStorage.setItem("isAuthenticated", "false");
   showNotification("已退出登录", "info");
-  router.push("/auth");
+  router.push("/login");
 };
 
 // 侧边栏折叠切换

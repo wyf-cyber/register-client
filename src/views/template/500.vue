@@ -1,152 +1,439 @@
 <template>
     <!-- 500页面 -->
-    <div class="error500">
-        <div class="error500-body-con">
-            <!-- 卡片 -->
-            <Card>
-                <!-- 500动画 -->
-                <div class="error500-body-con-title">
-                    <span class="error500-5-span">
-                        <Icon type="social-freebsd-devil"></Icon>
-                    </span>
-                    <span class="error500-0-span">
-                        <Icon type="social-freebsd-devil"></Icon>
-                    </span>
-                    <span class="error500-0-span">
-                        <Icon type="social-freebsd-devil"></Icon>
-                    </span>
-                </div>  
-                <!-- 500提示信息 -->
-                <p class="error500-body-con-message">抱歉，服务器出错了</p>
-                <!-- 按钮 -->
-                <div class="error500-btn-con">
-                    <Button @click="goHome" size="large" class="error-btn" type="text">返回首页</Button>
-                    <Button @click="backPage" size="large" class="error-btn primary" type="primary">返回上一页</Button>
+    <div class="not-found-container">
+        <div class="content">
+            <div class="number-container">
+                <div class="number five">5</div>
+                <div class="planet-container">
+                    <div class="planet">
+                        <div class="crack crack-1"></div>
+                        <div class="crack crack-2"></div>
+                        <div class="crack crack-3"></div>
+                        <div class="spark spark-1"></div>
+                        <div class="spark spark-2"></div>
+                        <div class="spark spark-3"></div>
+                    </div>
+                    <div class="astronaut">
+                        <div class="astronaut-body"></div>
+                        <div class="astronaut-head"></div>
+                        <div class="astronaut-arm arm-left"></div>
+                        <div class="astronaut-arm arm-right"></div>
+                        <div class="astronaut-leg leg-left"></div>
+                        <div class="astronaut-leg leg-right"></div>
+                        <div class="tool"></div>
+                    </div>
                 </div>
-            </Card>
+                <div class="number zero">0</div>
+            </div>
+            <h1 class="title">服务器错误</h1>
+            <p class="description">抱歉，服务器出现故障，我们正在抢修中</p>
+            <div class="button-container">
+                <button class="home-button" @click="goHome">返回首页</button>
+                <button class="back-button" @click="backPage">返回上一页</button>
+            </div>
         </div>
     </div>
-    </template>
-    
-    <script>
-    export default {
-        name: 'Error500',
-        methods: {
-            /* 返回上一页 */
-            backPage() {
-                this.$router.go(-1);
-            },
-            /* 返回首页 */
-            goHome() {
-                this.$router.push({
-                    name: 'home_index'
-                });
-            }
-        }
-    };
-    </script>
-    
-    <style lang="less">
-    /* 500动画 */
-    @keyframes error500animation {
-        0% {
-            transform: rotateZ(0deg);
-        }
-    
-        20% {
-            transform: rotateZ(-10deg);
-        }
-    
-        40% {
-            transform: rotateZ(5deg);
-        }
-    
-        60% {
-            transform: rotateZ(-5deg);
-        }
-    
-        80% {
-            transform: rotateZ(10deg);
-        }
-    
-        100% {
-            transform: rotateZ(0deg);
+</template>
+
+<script>
+export default {
+    name: 'Error500',
+    methods: {
+        /* 返回上一页 */
+        backPage() {
+            this.$router.go(-1);
+        },
+        /* 返回登录页面 */
+        goHome() {
+            this.$router.push({
+                name: 'login'
+            });
         }
     }
-    
-    .error500 {
-        /* 500主体 */
-        &-body-con {
-            width: 700px;
-            height: 500px;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-    
-            /* 500标题 */
-            &-title {
-                text-align: center;
-                font-size: 240px;
-                font-weight: 700;
-                color: #2d8cf0;
-                height: 260px;
-                line-height: 260px;
-                margin-top: 40px;
-    
-                /* 500动画 */
-                .error500-0-span {
-                    display: inline-block;
-                    position: relative;
-                    width: 170px;
-                    height: 170px;
-                    border-radius: 50%;
-                    border: 20px solid #ed3f14;
-                    color: #ed3f14;
-                    margin-right: 10px;
-    
-                    i {
-                        display: inline-block;
-                        font-size: 120px;
-                        position: absolute;
-                        bottom: -10px;
-                        left: 10px;
-                        transform-origin: center bottom;
-                        animation: error500animation 3s ease 0s infinite alternate;
-                    }
-                }
-            }
-    
-            /* 500提示信息 */
-            &-message {
-                display: block;
-                text-align: center;
-                font-size: 30px;
-                font-weight: 500;
-                letter-spacing: 4px;
-                color: #dddde2;
-            }
-        }
-    
-        /* 500按钮 */
-        &-btn-con {
-            text-align: center;
-            padding: 20px 0;
-            margin-bottom: 40px;
-            
-            .error-btn {
-                width: 180px;
-                &.primary {
-                    margin-left: 20px;
-                }
-                @media screen and (max-width: 768px) {
-                    width: 140px;
-                    &.primary {
-                        margin-left: 10px;
-                    }
-                }
-            }
-        }
+};
+</script>
+
+<style lang="less" scoped>
+/* 更强力的全局重置 */
+:global(body), :global(html) {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+/* 使用更强力的方式确保容器占满整个视口 */
+.not-found-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #1e2b38 0%, #2a3f54 100%);
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    overflow: hidden;
+    box-sizing: border-box !important;
+    z-index: 9999;
+}
+
+.content {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.number-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.number {
+    font-size: 12rem;
+    font-weight: 700;
+    color: #f5f5f5;
+    text-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    line-height: 1;
+}
+
+.five {
+    animation: float 6s ease-in-out infinite;
+}
+
+.zero {
+    animation: float 6s ease-in-out 0.5s infinite;
+}
+
+.planet-container {
+    width: 150px;
+    height: 150px;
+    margin: 0 1rem;
+    position: relative;
+    animation: shake 0.5s ease-in-out infinite alternate;
+}
+
+.planet {
+    width: 100%;
+    height: 100%;
+    background: #FF4136;
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 0 60px rgba(255, 65, 54, 0.6);
+    overflow: hidden;
+}
+
+.crack {
+    position: absolute;
+    background: #ffdc00;
+    transform-origin: center;
+}
+
+.crack-1 {
+    width: 80px;
+    height: 8px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    border-radius: 4px;
+}
+
+.crack-2 {
+    width: 60px;
+    height: 6px;
+    top: 30%;
+    left: 20%;
+    transform: rotate(-30deg);
+    border-radius: 3px;
+}
+
+.crack-3 {
+    width: 40px;
+    height: 5px;
+    bottom: 40%;
+    right: 20%;
+    transform: rotate(70deg);
+    border-radius: 2px;
+}
+
+.spark {
+    position: absolute;
+    background: #FFDC00;
+    border-radius: 50%;
+    animation: flicker 0.3s ease-in-out infinite alternate;
+}
+
+.spark-1 {
+    width: 15px;
+    height: 15px;
+    top: 30%;
+    left: 20%;
+    animation-delay: 0.1s;
+}
+
+.spark-2 {
+    width: 12px;
+    height: 12px;
+    bottom: 30%;
+    right: 40%;
+    animation-delay: 0.2s;
+}
+
+.spark-3 {
+    width: 10px;
+    height: 10px;
+    top: 60%;
+    right: 20%;
+    animation-delay: 0s;
+}
+
+.astronaut {
+    position: absolute;
+    width: 40px;
+    height: 50px;
+    right: -40px;
+    top: 60px;
+    animation: repair 8s ease-in-out infinite;
+}
+
+.astronaut-body {
+    position: absolute;
+    width: 22px;
+    height: 30px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    left: 9px;
+    top: 10px;
+}
+
+.astronaut-head {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #f5f5f5;
+    border-radius: 50%;
+    left: 11px;
+    top: 0;
+}
+
+.astronaut-arm {
+    position: absolute;
+    width: 8px;
+    height: 15px;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.arm-left {
+    left: 2px;
+    top: 15px;
+    transform-origin: top left;
+    animation: fixLeft 8s ease-in-out infinite;
+}
+
+.arm-right {
+    right: 2px;
+    top: 15px;
+    transform-origin: top right;
+    animation: fixRight 8s ease-in-out infinite;
+}
+
+.astronaut-leg {
+    position: absolute;
+    width: 8px;
+    height: 15px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    bottom: 0;
+}
+
+.leg-left {
+    left: 8px;
+}
+
+.leg-right {
+    right: 8px;
+}
+
+.tool {
+    position: absolute;
+    width: 8px;
+    height: 12px;
+    background: #7FDBFF;
+    left: -2px;
+    top: 10px;
+    border-radius: 2px;
+    transform-origin: bottom right;
+    animation: useTool 8s ease-in-out infinite;
+}
+
+.title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #fff;
+    text-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.description {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 2.5rem;
+}
+
+.button-container {
+    display: flex;
+    gap: 1rem;
+}
+
+.home-button, .back-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.home-button {
+    background-color: #FF4136;
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(255, 65, 54, 0.4);
+}
+
+.home-button:hover {
+    background-color: #e03a30;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 65, 54, 0.6);
+}
+
+.back-button {
+    background-color: transparent;
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.back-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
     }
-    </style>
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes shake {
+    0% {
+        transform: rotate(-2deg);
+    }
+    100% {
+        transform: rotate(2deg);
+    }
+}
+
+@keyframes flicker {
+    0%, 80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+@keyframes repair {
+    0%, 100% {
+        transform: rotate(0deg) translateX(-20px);
+    }
+    50% {
+        transform: rotate(10deg) translateX(0);
+    }
+}
+
+@keyframes fixLeft {
+    0%, 30%, 70%, 100% {
+        transform: rotate(15deg);
+    }
+    40%, 60% {
+        transform: rotate(-20deg);
+    }
+}
+
+@keyframes fixRight {
+    0%, 30%, 70%, 100% {
+        transform: rotate(-15deg);
+    }
+    40%, 60% {
+        transform: rotate(40deg);
+    }
+}
+
+@keyframes useTool {
+    0%, 30%, 70%, 100% {
+        transform: rotate(0deg);
+    }
+    40%, 60% {
+        transform: rotate(60deg);
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .number {
+        font-size: 8rem;
+    }
+    
+    .planet-container {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .title {
+        font-size: 2.5rem;
+    }
+    
+    .description {
+        font-size: 1rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .number {
+        font-size: 6rem;
+    }
+    
+    .planet-container {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .title {
+        font-size: 2rem;
+    }
+    
+    .button-container {
+        flex-direction: column;
+    }
+    
+    .home-button, .back-button {
+        width: 100%;
+    }
+}
+</style>
     
