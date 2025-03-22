@@ -177,16 +177,6 @@ const handleMobileToggle = () => {
   showMobileMenu.value = !showMobileMenu.value;
 };
 
-// 图标映射
-const iconMap = {
-  'ios-person': 'ios-person',
-  'ios-settings': 'ios-settings',
-  'ios-contact': 'ios-contact',
-  'ios-arrow-forward': 'ios-arrow-forward',
-  'ios-arrow-back': 'ios-arrow-back',
-  'ios-menu': 'ios-menu'
-};
-
 // 添加计算属性，计算主内容区域的样式
 const mainContentStyle = computed(() => {
   const sidebarWidth = isCollapsed.value ? 80 : 80;  // 

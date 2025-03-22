@@ -6,8 +6,7 @@ import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
 import { getUserInfoService, getUserAppointmentHistoryService } from "@/views/userinfo/api";
-import { getDepartmentStatsService, getAppointmentTrendService, countSystemUsersService, countSystemAppointmentsService } from "@/views/trafficView/api";
-import * as echarts from 'echarts';
+import { getAIResponseService } from "@/views/assistant/api";
 
 // 定义状态变量
 const router = useRouter();
@@ -93,49 +92,6 @@ const changeMenu = (name) => {
   handleMenuChange(name);
 };
 
-// 获取用户的预约记录
-const fetchReserveRecords = async () => {
-  loading.value = true;
-  try {
-    const response = await getUserAppointmentHistoryService(username.value);
-    reserveRecords.value = response || [];
-  } catch (error) {
-    console.error("获取预约记录出错:", error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-};
-
-// 获取状态文本
-const getStatusText = (status) => {
-  const statusMap = {
-    'pending': '待就诊',
-    'completed': '已完成',
-    'cancelled': '已取消'
-  };
-  return statusMap[status] || status;
-};
-
-// 获取状态样式类名
-const getStatusClass = (status) => {
-  return `status-${status}`;
-};
-
-// 退出登录
-const handleLogout = () => {
-  sessionStorage.clear();
-  sessionStorage.setItem("isAuthenticated", "false");
-  alert("已退出登录");
-  router.push("/auth");
-};
-
 // 侧边栏折叠切换
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
@@ -164,7 +120,7 @@ onMounted(async () => {
     }
     
     // 获取预约记录
-    await fetchReserveRecords();
+    // await fetchReserveRecords();
   } catch (error) {
     console.error("加载数据出错:", error);
   } finally {
@@ -177,16 +133,6 @@ const handleMobileToggle = () => {
   showMobileMenu.value = !showMobileMenu.value;
 };
 
-// 图标映射
-const iconMap = {
-  'ios-person': 'ios-person',
-  'ios-settings': 'ios-settings',
-  'ios-contact': 'ios-contact',
-  'ios-arrow-forward': 'ios-arrow-forward',
-  'ios-arrow-back': 'ios-arrow-back',
-  'ios-menu': 'ios-menu'
-};
-
 // 添加计算属性，计算主内容区域的样式
 const mainContentStyle = computed(() => {
   const sidebarWidth = isCollapsed.value ? 80 : 80;  // 
@@ -195,196 +141,6 @@ const mainContentStyle = computed(() => {
     width: `calc(100% - ${sidebarWidth}px)`
   };
 });
-
-// 定义图表数据
-const chartData = reactive({
-  departmentStats: [],
-  appointmentTrend: [],
-  userCount: 0,
-  appointmentCounts: []
-});
-
-const dateRange = reactive({
-  startDate: formatDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)), // 默认30天前
-  endDate: formatDate(new Date())
-});
-
-// 图表实例
-const departmentChartRef = ref(null);
-const trendChartRef = ref(null);
-let departmentChart = null;
-let trendChart = null;
-
-// 获取统计数据
-const fetchStatisticsData = async () => {
-  loading.value = true;
-  try {
-    // 获取科室统计数据
-    const deptStats = await getDepartmentStatsService(dateRange.startDate, dateRange.endDate);
-    chartData.departmentStats = deptStats || [];
-    
-    // 获取预约趋势数据
-    const trendData = await getAppointmentTrendService(dateRange.startDate, dateRange.endDate);
-    chartData.appointmentTrend = trendData || [];
-    
-    // 获取用户总数
-    const userCountResponse = await countSystemUsersService();
-    chartData.userCount = userCountResponse || 0;
-    
-    // 获取未来7天预约数量
-    const appointmentCountsResponse = await countSystemAppointmentsService(formatDate(new Date()));
-    chartData.appointmentCounts = appointmentCountsResponse || [];
-    
-    // 初始化图表
-    initCharts();
-  } catch (error) {
-    console.error("获取统计数据出错:", error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-// 初始化图表
-const initCharts = () => {
-  nextTick(() => {
-    // 初始化科室统计图表
-    if (departmentChartRef.value) {
-      departmentChart = echarts.init(departmentChartRef.value);
-      const departmentNames = chartData.departmentStats.map(item => item.department);
-      const appointmentCounts = chartData.departmentStats.map(item => item.count);
-      
-      departmentChart.setOption({
-        title: {
-          text: '各科室预约数量统计',
-          left: 'center'
-        },
-        tooltip: {
-          trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
-        },
-        legend: {
-          orient: 'vertical',
-          left: 'left',
-          data: departmentNames
-        },
-        series: [
-          {
-            name: '预约数量',
-            type: 'pie',
-            radius: ['40%', '70%'],
-            avoidLabelOverlap: false,
-            itemStyle: {
-              borderRadius: 10,
-              borderColor: '#fff',
-              borderWidth: 2
-            },
-            label: {
-              show: false,
-              position: 'center'
-            },
-            emphasis: {
-              label: {
-                show: true,
-                fontSize: '18',
-                fontWeight: 'bold'
-              }
-            },
-            labelLine: {
-              show: false
-            },
-            data: departmentNames.map((name, index) => {
-              return {
-                value: appointmentCounts[index],
-                name: name
-              };
-            })
-          }
-        ]
-      });
-    }
-    
-    // 初始化预约趋势图表
-    if (trendChartRef.value) {
-      trendChart = echarts.init(trendChartRef.value);
-      const dates = chartData.appointmentTrend.map(item => item.date);
-      const counts = chartData.appointmentTrend.map(item => item.count);
-      
-      trendChart.setOption({
-        title: {
-          text: '预约趋势统计',
-          left: 'center'
-        },
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          }
-        },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true
-        },
-        xAxis: {
-          type: 'category',
-          data: dates,
-          axisLabel: {
-            rotate: 45
-          }
-        },
-        yAxis: {
-          type: 'value'
-        },
-        series: [
-          {
-            name: '预约数量',
-            type: 'line',
-            smooth: true,
-            data: counts,
-            itemStyle: {
-              color: '#2daa9e'
-            },
-            areaStyle: {
-              color: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
-                colorStops: [
-                  {
-                    offset: 0,
-                    color: 'rgba(45, 170, 158, 0.8)'
-                  },
-                  {
-                    offset: 1,
-                    color: 'rgba(45, 170, 158, 0.1)'
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      });
-    }
-  });
-};
-
-// 处理日期范围变化
-const handleDateRangeChange = () => {
-  fetchStatisticsData();
-};
-
-// 窗口大小变化时重新调整图表大小
-const handleResize = () => {
-  if (departmentChart) {
-    departmentChart.resize();
-  }
-  if (trendChart) {
-    trendChart.resize();
-  }
-};
 
 // 组件挂载时获取数据
 onMounted(async () => {
