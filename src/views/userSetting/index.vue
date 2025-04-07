@@ -250,7 +250,7 @@ onMounted(() => {
 // 移动菜单开关处理
 const handleMobileToggle = () => {
   showMobileMenu.value = !showMobileMenu.value;
-};
+}; 
 
 // 添加计算属性，计算主内容区域的样式
 const mainContentStyle = computed(() => {

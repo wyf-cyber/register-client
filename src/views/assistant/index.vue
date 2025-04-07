@@ -2,11 +2,15 @@
 <script setup>
 import { ref, onMounted, computed, reactive, nextTick, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
+import { marked } from 'marked'; // 导入marked库用于Markdown渲染
+import DOMPurify from 'dompurify'; // 导入DOMPurify用于防止XSS攻击
 import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
 import { getUserInfoService, getUserAppointmentHistoryService } from "@/views/userinfo/api";
 import { getAIResponseService } from "@/views/assistant/api";
+import { User, ChatLineRound, Delete, Position } from '@element-plus/icons-vue';
+
 
 // 定义状态变量
 const router = useRouter();
@@ -184,36 +188,31 @@ const sendMessage = async () => {
   // 显示AI正在输入状态
   isTyping.value = true;
   
-  // 模拟AI响应（实际项目中替换为API调用）
-  setTimeout(() => {
-    // 这里应该是调用后端API获取AI响应
-    const aiResponse = getAIResponse(userMessage);
+  // 滚动到最新消息
+  scrollToBottom();
+
+  try {
+    // 调用后端API获取AI响应
+    const response = await getAIResponseService(userMessage);
     
     // 添加AI响应到聊天历史
     chatHistory.value.push({
       role: 'assistant',
-      content: aiResponse
+      content: response
     });
-    
+  } catch (error) {
+    console.error("AI响应获取失败:", error);
+    // 添加错误消息
+    chatHistory.value.push({
+      role: 'assistant',
+      content: '很抱歉，我暂时无法回答您的问题。请稍后再试或联系客服。'
+    });
+  } finally {
     isTyping.value = false;
     
     // 滚动到最新消息
     scrollToBottom();
-  }, 1000);
-};
-
-// 模拟AI响应（实际项目中应替换为API调用）
-const getAIResponse = (message) => {
-  const responses = [
-    '根据您的描述，这可能是季节性过敏的症状，建议您避免接触过敏原并咨询专科医生。',
-    '您的症状可能与多种因素有关，建议进行详细的体检和血液检查以确定具体原因。',
-    '这听起来可能是轻度的肠胃炎症，建议您多喝水，注意饮食清淡，如症状加重请及时就医。',
-    '从您描述的情况来看，可能是普通感冒，建议您多休息，多喝水，如果症状持续超过一周请咨询医生。',
-    '这些症状可能与压力和疲劳有关，建议您合理安排休息时间，保持良好的作息习惯。',
-    '您描述的情况需要进一步诊断，建议您预约相关科室的专科医生进行面诊。'
-  ];
-  
-  return responses[Math.floor(Math.random() * responses.length)];
+  }
 };
 
 // 处理输入框回车事件
@@ -244,6 +243,15 @@ const clearChat = () => {
 onMounted(() => {
   scrollToBottom();
 });
+
+// ios图标设置
+
+// 定义渲染Markdown的函数
+const renderMarkdown = (text) => {
+  // 使用marked转换Markdown为HTML，并使用DOMPurify清理HTML以防止XSS攻击
+  return DOMPurify.sanitize(marked.parse(text));
+};
+
 </script>
 
 <template>
@@ -289,12 +297,16 @@ onMounted(() => {
             >
               <div class="message-avatar">
                 <div class="avatar-icon">
-                  <i :class="['ivu-icon', message.role === 'user' ? 'ios-person' : 'ios-medical']"></i>
+                  <!-- 使用Element Plus的图标组件 -->
+                  <el-icon v-if="message.role === 'user'"><User /></el-icon>
+                  <el-icon v-else><ChatLineRound /></el-icon>
                 </div>
               </div>
               <div class="message-content">
                 <div class="message-sender">{{ message.role === 'user' ? '我' : 'AI问诊助手' }}</div>
-                <div class="message-text">{{ message.content }}</div>
+                <!-- 用户消息保持纯文本，AI消息使用Markdown渲染 -->
+                <div v-if="message.role === 'user'" class="message-text">{{ message.content }}</div>
+                <div v-else class="message-text markdown-content" v-html="renderMarkdown(message.content)"></div>
               </div>
             </div>
             
@@ -319,10 +331,10 @@ onMounted(() => {
               ></textarea>
               <div class="input-actions">
                 <button @click="clearChat" class="clear-btn" title="清空对话">
-                  <i class="ivu-icon ios-trash"></i>
+                  <el-icon><Delete /></el-icon> 清空
                 </button>
                 <button @click="sendMessage" class="send-btn" :disabled="!userInput.trim() || isTyping">
-                  <i class="ivu-icon ios-send"></i> 发送
+                  <el-icon><Position /></el-icon> 发送
                 </button>
               </div>
             </div>
@@ -982,7 +994,7 @@ button:disabled {
 
 .message {
   display: flex;
-  margin-bottom: 16px;
+  // margin-bottom: 16px;
   max-width: 80%;
 }
 
@@ -1021,7 +1033,7 @@ button:disabled {
 
 .message-content {
   background: #f7f7f7;
-  padding: 12px 16px;
+  padding: 12px;
   border-radius: 12px;
   position: relative;
 }
@@ -1145,13 +1157,13 @@ button:disabled {
 }
 
 .clear-btn {
-  background: transparent;
-  color: #909399;
+  background: #2daa9e;
+  color: #fff;
   border: none;
 }
 
 .clear-btn:hover {
-  color: #606266;
+  background: #258f85;
 }
 
 .disclaimer {
@@ -1181,6 +1193,97 @@ button:disabled {
   
   .input-actions {
     flex-direction: row;
+  }
+}
+
+/* 添加Markdown内容的样式 */
+:deep(.markdown-content) {
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 12px;
+    margin-bottom: 1px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  
+  h1 {
+    font-size: 20px;
+  }
+  
+  h2 {
+    font-size: 18px;
+  }
+  
+  h3 {
+    font-size: 16px;
+  }
+  
+  p {
+    margin-bottom: 3px;
+  }
+  
+  ul, ol {
+    padding-left: 20px;
+    margin-bottom: 3px;
+  }
+  
+  li {
+    margin-bottom: 3px;
+  }
+  
+  code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+  }
+  
+  pre {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 3px;
+  }
+  
+  pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+  
+  blockquote {
+    border-left: 4px solid #b4b4b4;
+    padding-left: 10px;
+    color: #666;
+    margin-bottom: 3px;
+  }
+  
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 3px;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+  }
+  
+  th {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  a {
+    color: #2daa9e;
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  img {
+    max-width: 100%;
+    border-radius: 4px;
   }
 }
 </style>

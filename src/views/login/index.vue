@@ -404,7 +404,7 @@ onMounted(fetchVerifyCode);
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1001;
+    z-index: 10;
   }
 }
 
@@ -796,7 +796,7 @@ onMounted(fetchVerifyCode);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  z-index: 9999;
+  z-index: 1001;
   animation: slideIn 0.3s ease-out;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   

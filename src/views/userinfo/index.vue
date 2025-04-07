@@ -234,7 +234,7 @@ const mainContentStyle = computed(() => {
 
           <!-- 下半部分：预约挂号记录 -->
           <div class="record-section">
-            <h2>预约挂号记录</h2>
+            <h2>预约挂号历史记录</h2>
             <div v-if="loading" class="loading-container">
               <CircleLoading />
               <span>加载中...</span>
