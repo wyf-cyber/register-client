@@ -6,13 +6,14 @@ import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
 import { getUserInfoService, getUserAppointmentHistoryService } from "@/views/userinfo/api";
-import { getDepartmentStatsService, getAppointmentTrendService, countSystemUsersService, countSystemAppointmentsService } from "@/views/trafficView/api";
+import { getDepartmentStatsService, getAppointmentTrendService, countSystemUsersService, countSystemAppointmentsService, getHotDoctorsService } from "@/views/trafficView/api";
 import * as echarts from 'echarts';
 
 // 定义状态变量
 const router = useRouter();
 const username = ref(sessionStorage.getItem("UserName") || "未登录");
 const userRole = ref(sessionStorage.getItem("UserRole") === "admin" ? "管理员" : "普通用户");
+const isAdmin = ref(sessionStorage.getItem("UserRole") === "admin");
 const isCollapsed = ref(sessionStorage.getItem("sidebarCollapsed") === "true" ? true : false);
 const loading = ref(true);
 const showMobileMenu = ref(false);
@@ -20,69 +21,6 @@ const singleOpenName = ref(["user"]); // 控制菜单展开状态
 const menuTheme = ref("dark"); // 菜单主题
 const email = ref(sessionStorage.getItem("Email") || "未绑定");
 const reserveRecords = ref([]);
-/**
- * 侧边栏菜单数据
- * @name 菜单名称，用于路由跳转
- * @title 菜单标题，用于显示在菜单上
- * @icon 菜单图标，用于显示在菜单上
- * @children 子菜单，用于显示在折叠菜单中
- * @active-name 当前激活的菜单名称，有高亮效果
- * @open-names 当前展开的菜单名称，有展开效果
- */
-
-
- const adminMenuList = ref([
-  {
-    name: "adminbusinesscenter",
-    title: "用户流量统计",
-    icon: "ios-document",
-    children: [
-      { name: "trafficView", title: "用户流量统计", icon: "ios-document" },
-    ],
-  },
-  {
-    name: "adminusercenter",
-    title: "用户中心",
-    icon: "ios-person",
-    children: [
-      { name: "profile", title: "个人资料", icon: "ios-person" },
-      { name: "settings", title: "账号设置", icon: "ios-settings" },
-    ],
-  },
-]);
-
-const userMenuList = ref([
-  {
-    name: "registercenter",
-    title: "预约挂号",
-    icon: "ios-calendar",
-    children: [
-      { name: "register", title: "预约挂号", icon: "ios-navigate" },
-      { name: "evaluate", title: "医生评价", icon: "ios-search" },
-    ],
-  },
-  {
-    name: "usercenter",
-    title: "用户中心",
-    icon: "ios-person",
-    children: [
-      { name: "reserverecords", title: "预约记录", icon: "ios-calendar" },
-      { name: "profile", title: "个人资料", icon: "ios-contact" },
-      { name: "settings", title: "账号设置", icon: "ios-settings" },
-    ],
-  },
-  {
-    name: "assistant",
-    title: "AI问诊助手",
-    icon: "ios-chatbubble",
-    children: [
-      { name: "assistant", title: "AI问诊助手", icon: "ios-chatbubble" },
-    ],
-  },
-]);
-
-// 根据用户角色选择菜单类型
-const menuList = ref(userRole.value === "管理员" ? adminMenuList.value : userMenuList.value);
 
 // 菜单处理
 const handleMenuChange = (name) => {
@@ -191,7 +129,8 @@ const chartData = reactive({
   departmentStats: [],
   appointmentTrend: [],
   userCount: 0,
-  appointmentCounts: []
+  appointmentCounts: [],
+  hotDoctors: [] // 添加热门医生数据
 });
 
 const dateRange = reactive({
@@ -213,9 +152,9 @@ const fetchStatisticsData = async () => {
     const deptStats = await getDepartmentStatsService(dateRange.startDate, dateRange.endDate);
     chartData.departmentStats = deptStats || [];
     
-    // 获取预约趋势数据
-    const trendData = await getAppointmentTrendService(dateRange.startDate, dateRange.endDate);
-    chartData.appointmentTrend = trendData || [];
+    // 获取热门医生数据
+    const hotDoctorsData = await getHotDoctorsService(dateRange.startDate, dateRange.endDate);
+    chartData.hotDoctors = hotDoctorsData || [];
     
     // 获取用户总数
     const userCountResponse = await countSystemUsersService();
@@ -293,71 +232,7 @@ const initCharts = () => {
       });
     }
     
-    // 初始化预约趋势图表
-    if (trendChartRef.value) {
-      trendChart = echarts.init(trendChartRef.value);
-      const dates = chartData.appointmentTrend.map(item => item.date);
-      const counts = chartData.appointmentTrend.map(item => item.count);
-      
-      trendChart.setOption({
-        title: {
-          text: '预约趋势统计',
-          left: 'center'
-        },
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          }
-        },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true
-        },
-        xAxis: {
-          type: 'category',
-          data: dates,
-          axisLabel: {
-            rotate: 45
-          }
-        },
-        yAxis: {
-          type: 'value'
-        },
-        series: [
-          {
-            name: '预约数量',
-            type: 'line',
-            smooth: true,
-            data: counts,
-            itemStyle: {
-              color: '#2daa9e'
-            },
-            areaStyle: {
-              color: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
-                colorStops: [
-                  {
-                    offset: 0,
-                    color: 'rgba(45, 170, 158, 0.8)'
-                  },
-                  {
-                    offset: 1,
-                    color: 'rgba(45, 170, 158, 0.1)'
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      });
-    }
+    // 不再初始化热门医生图表，改为使用卡片式展示
   });
 };
 
@@ -404,7 +279,6 @@ onUnmounted(() => {
       <div class="layout-sider" :class="{ collapsed: isCollapsed, 'mobile-open': showMobileMenu }">
         <ShrinkableMenu 
           :shrink="isCollapsed"
-          :menu-list="menuList"
           :theme="menuTheme"
           :open-names="singleOpenName"
           :show-mobile-toggle="true"
@@ -412,6 +286,7 @@ onUnmounted(() => {
           :show-shrink-button="true"
           :username="username"
           :userRole="userRole"
+          :isAdmin="isAdmin"
           @on-change="changeMenu"
           @on-mobile-toggle="handleMobileToggle"
           @on-shrink="toggleCollapse"
@@ -482,9 +357,30 @@ onUnmounted(() => {
                 <div ref="departmentChartRef" class="chart"></div>
               </div>
               
-              <!-- 预约趋势图表 -->
-              <div class="chart-wrapper">
-                <div ref="trendChartRef" class="chart"></div>
+              <!-- 热门医生展示区域 -->
+              <div class="hot-doctors-wrapper">
+                <h3 class="section-title">热门医生排行榜</h3>
+                <div class="hot-doctors-list">
+                  <div v-for="(doctor, index) in chartData.hotDoctors" :key="index" class="doctor-card">
+                    <div class="rank-badge" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
+                    <div class="doctor-info">
+                      <div class="doctor-name">{{ doctor.doctor }}</div>
+                      <div class="appointment-count">
+                        <span>预约量:</span>
+                        <div class="progress-bar-container">
+                          <div 
+                            class="progress-bar" 
+                            :style="{ width: `${Math.min(doctor.count / (chartData.hotDoctors[0]?.count || 1) * 100, 100)}%` }"
+                          ></div>
+                          <span class="count-label">{{ doctor.count }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="chartData.hotDoctors.length === 0" class="empty-data">
+                    暂无医生数据
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -1114,6 +1010,138 @@ button:disabled {
   .forecast-bar-item {
     min-width: 60px;
   }
+}
+
+/* 热门医生卡片样式 */
+.hot-doctors-wrapper {
+  flex: 1;
+  min-width: 300px;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.hot-doctors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: 360px;
+  overflow-y: auto;
+  padding: 5px;
+}
+
+.doctor-card {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-radius: 8px;
+  background: #f9f9f9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+  position: relative;
+}
+
+.doctor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.rank-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  margin-right: 15px;
+}
+
+.rank-1 {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3);
+  font-size: 16px;
+}
+
+.rank-2 {
+  background: linear-gradient(135deg, #C0C0C0, #A9A9A9);
+  box-shadow: 0 2px 8px rgba(169, 169, 169, 0.3);
+  font-size: 16px;
+}
+
+.rank-3 {
+  background: linear-gradient(135deg, #CD7F32, #A0522D);
+  box-shadow: 0 2px 8px rgba(160, 82, 45, 0.3);
+  font-size: 16px;
+}
+
+.rank-4, .rank-5 {
+  background: #2daa9e;
+  font-size: 14px;
+}
+
+.doctor-info {
+  flex: 1;
+}
+
+.doctor-name {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.appointment-count {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+.progress-bar-container {
+  flex: 1;
+  height: 12px;
+  background: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(to right, #2daa9e, #4ecdc4);
+  border-radius: 10px;
+}
+
+.count-label {
+  position: absolute;
+  right: 8px;
+  top: -1px;
+  font-size: 12px;
+  color: #333;
+  font-weight: bold;
+}
+
+.empty-data {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 16px;
 }
 </style>
 

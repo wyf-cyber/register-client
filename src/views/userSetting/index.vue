@@ -34,6 +34,7 @@ const actionType = ref("");
 const router = useRouter();
 const username = ref(sessionStorage.getItem("UserName") || "未登录");
 const userRole = ref(window.sessionStorage.getItem('UserRole') === "admin" ? "管理员" : "普通用户");
+const isAdmin = ref(window.sessionStorage.getItem('UserRole') === "admin");
 const isCollapsed = ref(sessionStorage.getItem("sidebarCollapsed") === "true" ? true : false);
 const loading = ref(false);
 const showMobileMenu = ref(false);
@@ -273,7 +274,6 @@ const mainContentStyle = computed(() => {
       <div class="layout-sider" :class="{ collapsed: isCollapsed, 'mobile-open': showMobileMenu }">
         <ShrinkableMenu 
           :shrink="isCollapsed"
-          :menu-list="menuList"
           :theme="menuTheme"
           :open-names="singleOpenName"
           :show-mobile-toggle="true"
@@ -281,6 +281,7 @@ const mainContentStyle = computed(() => {
           :show-shrink-button="true"
           :username="username"
           :userRole="userRole"
+          :isAdmin="isAdmin"
           @on-change="changeMenu"
           @on-mobile-toggle="handleMobileToggle"
           @on-shrink="toggleCollapse"

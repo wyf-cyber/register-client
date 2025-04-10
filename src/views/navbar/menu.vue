@@ -43,7 +43,7 @@
         class="el-menu-vertical"
         @select="handleChange"
       >
-        <template v-for="item in menuList" :key="item.name">
+        <template v-for="item in activeMenuList" :key="item.name">
           <el-sub-menu v-if="item.children && item.children.length" :index="item.name">
             <template #title>
               <el-icon>
@@ -95,7 +95,7 @@ export default {
   props: {
     menuList: {
       type: Array,
-      required: true
+      default: () => []
     },
     theme: {
       type: String,
@@ -140,6 +140,11 @@ export default {
     userRole: {
       type: String,
       default: "user"
+    },
+    // 是否是管理员
+    isAdmin: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -151,13 +156,76 @@ export default {
     },
     activeTextColor() {
       return this.theme === "dark" ? "#fff" : "#409EFF";
+    },
+    // 根据用户角色选择菜单
+    activeMenuList() {
+      // 如果外部传入了menuList，则优先使用外部传入的
+      if (this.menuList && this.menuList.length > 0) {
+        return this.menuList;
+      }
+      
+      // 否则根据isAdmin属性选择内置菜单
+      return this.isAdmin ? this.adminMenuList : this.userMenuList;
     }
   },
   data() {
     return {
       // 存储当前展开的菜单项
       currentOpenedMenu: sessionStorage.getItem('openedMenuItems') ? 
-                         JSON.parse(sessionStorage.getItem('openedMenuItems')) : []
+                         JSON.parse(sessionStorage.getItem('openedMenuItems')) : [],
+                         
+      // 管理员菜单列表
+      adminMenuList: [
+        {
+          name: "adminbusinesscenter",
+          title: "业务中心",
+          icon: "ios-document",
+          children: [
+            { name: "trafficView", title: "平台流量统计", icon: "ios-document" },
+            { name: "doctorManager", title: "医生管理", icon: "ios-document" },
+          ],
+        },
+        {
+          name: "adminusercenter",
+          title: "用户中心",
+          icon: "ios-person",
+          children: [
+            { name: "profile", title: "个人资料", icon: "ios-person" },
+            { name: "settings", title: "账号设置", icon: "ios-settings" },
+          ],
+        },
+      ],
+      
+      // 普通用户菜单列表
+      userMenuList: [
+        {
+          name: "registercenter",
+          title: "预约挂号",
+          icon: "ios-calendar",
+          children: [
+            { name: "register", title: "预约挂号", icon: "ios-navigate" },
+            { name: "evaluate", title: "医生评价", icon: "ios-search" },
+          ],
+        },
+        {
+          name: "usercenter",
+          title: "用户中心",
+          icon: "ios-person",
+          children: [
+            { name: "reserverecords", title: "预约记录", icon: "ios-calendar" },
+            { name: "profile", title: "个人资料", icon: "ios-contact" },
+            { name: "settings", title: "账号设置", icon: "ios-settings" },
+          ],
+        },
+        {
+          name: "assistant",
+          title: "AI问诊助手",
+          icon: "ios-chatbubble",
+          children: [
+            { name: "assistant", title: "AI问诊助手", icon: "ios-chatbubble" },
+          ],
+        },
+      ]
     }
   },
   methods: {
@@ -206,7 +274,7 @@ export default {
       
       if (willpush) {
         // 存储当前展开的菜单项到sessionStorage
-        for (const item of this.menuList) {
+        for (const item of this.activeMenuList) {
           if (item.children && item.children.some(child => child.name === name)) {
             // 保存父菜单名称
             this.currentOpenedMenu = [item.name];

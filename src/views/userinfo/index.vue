@@ -10,6 +10,7 @@ import { getUserInfoService, getUserAppointmentHistoryService } from "@/views/us
 const router = useRouter();
 const username = ref(sessionStorage.getItem("UserName") || "未登录");
 const userRole = ref(sessionStorage.getItem("UserRole") === "admin" ? "管理员" : "普通用户");
+const isAdmin = ref(sessionStorage.getItem("UserRole") === "admin");
 const isCollapsed = ref(sessionStorage.getItem("sidebarCollapsed") === "true" ? true : false);
 const loading = ref(false);
 const showMobileMenu = ref(false);
@@ -26,60 +27,6 @@ const reserveRecords = ref([]);
  * @active-name 当前激活的菜单名称，有高亮效果
  * @open-names 当前展开的菜单名称，有展开效果
  */
-
-
-const adminMenuList = ref([
-  {
-    name: "adminbusinesscenter",
-    title: "用户流量统计",
-    icon: "ios-document",
-    children: [
-      { name: "trafficView", title: "用户流量统计", icon: "ios-document" },
-    ],
-  },
-  {
-    name: "adminusercenter",
-    title: "用户中心",
-    icon: "ios-person",
-    children: [
-      { name: "profile", title: "个人资料", icon: "ios-person" },
-      { name: "settings", title: "账号设置", icon: "ios-settings" },
-    ],
-  },
-]);
-
-const userMenuList = ref([
-  {
-    name: "registercenter",
-    title: "预约挂号",
-    icon: "ios-calendar",
-    children: [
-      { name: "register", title: "预约挂号", icon: "ios-navigate" },
-      { name: "evaluate", title: "医生评价", icon: "ios-search" },
-    ],
-  },
-  {
-    name: "usercenter",
-    title: "用户中心",
-    icon: "ios-person",
-    children: [
-      { name: "reserverecords", title: "预约记录", icon: "ios-calendar" },
-      { name: "profile", title: "个人资料", icon: "ios-contact" },
-      { name: "settings", title: "账号设置", icon: "ios-settings" },
-    ],
-  },
-  {
-    name: "assistant",
-    title: "AI问诊助手",
-    icon: "ios-chatbubble",
-    children: [
-      { name: "assistant", title: "AI问诊助手", icon: "ios-chatbubble" },
-    ],
-  },
-]);
-
-// 根据用户角色选择菜单类型
-const menuList = ref(userRole.value === "管理员" ? adminMenuList.value : userMenuList.value);
 
 // 菜单处理
 const handleMenuChange = (name) => {
@@ -194,7 +141,6 @@ const mainContentStyle = computed(() => {
       <div class="layout-sider" :class="{ collapsed: isCollapsed, 'mobile-open': showMobileMenu }">
         <ShrinkableMenu 
           :shrink="isCollapsed"
-          :menu-list="menuList"
           :theme="menuTheme"
           :open-names="singleOpenName"
           :show-mobile-toggle="true"
@@ -202,6 +148,7 @@ const mainContentStyle = computed(() => {
           :show-shrink-button="true"
           :username="username"
           :userRole="userRole"
+          :isAdmin="isAdmin"
           @on-change="changeMenu"
           @on-mobile-toggle="handleMobileToggle"
           @on-shrink="toggleCollapse"
