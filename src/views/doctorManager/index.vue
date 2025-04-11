@@ -34,9 +34,8 @@ const menuTheme = ref("dark"); // 菜单主题
 
 // 医生管理数据
 const activeTab = ref("doctorList"); // doctorList, addDoctor, schedule
-const doctorsList = ref([]);
-const allDoctorsList = ref([]); // 存储所有医生信息
-const scheduleList = ref([]);
+const doctorsList = ref([]); // 医生列表数据
+const scheduleList = ref([]); // 排班管理数据
 const selectedDate = ref(formatDate(new Date()));
 const departments = ref(['内科', '外科', '儿科', '眼科', '皮肤科', '妇科', '骨科', '神经科', '精神科', '口腔科']);
 const selectedDepartment = ref('全部');
@@ -109,9 +108,7 @@ const mainContentStyle = computed(() => {
 
 // 过滤后的医生列表
 const filteredDoctors = computed(() => {
-  // 确定使用哪个数据源
-  let sourceList = isGlobalSearch.value ? allDoctorsList.value : doctorsList.value;
-  let filtered = sourceList;
+  let filtered = doctorsList.value;
   
   // 按科室筛选
   if (selectedDepartment.value !== '全部') {
@@ -131,21 +128,7 @@ const filteredDoctors = computed(() => {
 });
 
 // 获取医生列表
-const fetchDoctorSchedule = async () => {
-  loading.value = true;
-  try {
-    const response = await getDoctorScheduleService(selectedDate.value);
-    scheduleList.value = response || [];
-    doctorsList.value = scheduleList.value;
-  } catch (error) {
-    console.error("获取医生排班出错:", error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-// 获取所有科室的医生信息
-const fetchAllDoctors = async () => {
+const fetchDoctorList = async () => {
   loading.value = true;
   try {
     const allDoctors = [];
@@ -154,20 +137,14 @@ const fetchAllDoctors = async () => {
     for (const dept of departments.value) {
       try {
         const deptDoctors = await getDoctorsByDepartmentService(dept);
-        // 调试日志
-        console.log(`${dept}科室医生原始数据:`, deptDoctors);
-        
         if (deptDoctors && deptDoctors.length > 0) {
           // 添加科室信息到医生数据中
           deptDoctors.forEach(doctor => {
-            // 确保work_date字段存在，如果不存在则使用当前选中日期
             const doctorData = {
-              ...doctor,   // 解构医生对象
-              department: doctor.department || dept, // 确保科室信息正确
-              state: doctor.state || 0, // 确保状态信息存在
-              work_date: doctor.work_date || selectedDate.value // 确保工作日期存在
+              ...doctor,
+              department: doctor.department || dept,
+              state: doctor.state || 0
             };
-            
             allDoctors.push(doctorData);
           });
         }
@@ -176,10 +153,22 @@ const fetchAllDoctors = async () => {
       }
     }
     
-    allDoctorsList.value = allDoctors;
-    console.log("已获取所有医生信息:", allDoctorsList.value);
+    doctorsList.value = allDoctors;
   } catch (error) {
-    console.error("获取所有医生信息出错:", error);
+    console.error("获取医生列表出错:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 获取排班数据
+const fetchDoctorSchedule = async () => {
+  loading.value = true;
+  try {
+    const response = await getDoctorScheduleService(selectedDate.value);
+    scheduleList.value = response || [];
+  } catch (error) {
+    console.error("获取医生排班出错:", error);
   } finally {
     loading.value = false;
   }
@@ -189,14 +178,10 @@ const fetchAllDoctors = async () => {
 const switchTab = (tab) => {
   activeTab.value = tab;
   if (tab === 'doctorList') {
-    // 切换到医生列表时，需要同时获取当前日期的排班数据和全局医生数据
-    fetchDoctorSchedule();
-    
-    // 如果之前已有全局搜索，则刷新全局医生列表
-    if (isGlobalSearch.value || allDoctorsList.value.length === 0) {
-      fetchAllDoctors();
-    }
+    // 切换到医生列表时，获取医生列表数据
+    fetchDoctorList();
   } else if (tab === 'schedule') {
+    // 切换到排班管理时，获取排班数据
     fetchDoctorSchedule();
   } else if (tab === 'addDoctor') {
     // 重置表单
@@ -219,13 +204,6 @@ const switchTab = (tab) => {
 };
 
 // 删除医生
-const confirmDeleteDoctor = (department, doctor, day) => {
-  deleteModal.visible = true;
-  deleteModal.department = department;
-  deleteModal.doctor = doctor;
-  deleteModal.day = day;
-};
-
 const deleteDoctor = async () => {
   loading.value = true;
   try {
@@ -237,9 +215,12 @@ const deleteDoctor = async () => {
     messagesRef.value.show("医生信息删除成功", "success");
     deleteModal.visible = false;
     
-    // 更新所有医生数据
-    fetchDoctorSchedule();
-    fetchAllDoctors(); // 更新全局医生列表
+    // 根据当前标签页更新相应的数据
+    if (activeTab.value === 'doctorList') {
+      await fetchDoctorList();
+    } else if (activeTab.value === 'schedule') {
+      await fetchDoctorSchedule();
+    }
   } catch (error) {
     console.error("删除医生信息出错:", error);
     messagesRef.value.show("删除医生信息失败，请重试", "error");
@@ -325,34 +306,15 @@ const submitDoctorForm = async () => {
         return;
       }
       
-      // 更新前记录日志
-      console.log("准备更新医生信息:", {
-        原始数据: {
-          科室: originalDoctor.department,
-          医生: originalDoctor.doctor,
-          日期: originalDoctor.day
-        },
-        新数据: {
-          科室: doctorForm.department,
-          医生: doctorForm.doctor,
-          详情: doctorForm.detail,
-          日期: doctorForm.day
-        }
-      });
-      
-      // SQL调试日志 - 显示预期的SQL查询条件
-      // alert(`预期执行的SQL: UPDATE doctors SET department='${doctorForm.department}', doctor='${doctorForm.doctor}', detail='${doctorForm.detail}', work_date='${doctorForm.day}' WHERE department='${originalDoctor.department}' AND doctor='${originalDoctor.doctor}' AND work_date='${originalDoctor.day}'`);
-      
-      // 注意：参数顺序必须与后端API一致
-      // 后端方法签名：updateDoctor(String department, String doctor, String day, String newDepartment, String newDoctor, String newDetail, String newDay)
+      // 更新医生信息
       const response = await updateDoctorService(
-        originalDoctor.department,  // 原科室 - 查询键
-        originalDoctor.doctor,      // 原医生 - 查询键
-        originalDoctor.day,         // 原日期 - 查询键
-        doctorForm.department,      // 新科室 - 新值
-        doctorForm.doctor,          // 新医生 - 新值
-        doctorForm.detail,          // 新详情 - 新值
-        doctorForm.day              // 新日期 - 新值
+        originalDoctor.department,
+        originalDoctor.doctor,
+        originalDoctor.day,
+        doctorForm.department,
+        doctorForm.doctor,
+        doctorForm.detail,
+        doctorForm.day
       );
       
       console.log("更新返回结果:", response);
@@ -369,15 +331,12 @@ const submitDoctorForm = async () => {
       messagesRef.value.show("医生信息添加成功", "success");
     }
     
-    // 先切换标签页，确保日期已设置正确
-    switchTab('doctorList');
-    
-    // 由于后端数据库使用 department, doctor, work_date 作为联合主键
-    // 更新完成后需要刷新当前日期下的排班数据
-    await fetchDoctorSchedule();
-    
-    // 同时刷新全局医生列表
-    await fetchAllDoctors();
+    // 根据当前标签页更新相应的数据
+    if (activeTab.value === 'doctorList') {
+      await fetchDoctorList();
+    } else if (activeTab.value === 'schedule') {
+      await fetchDoctorSchedule();
+    }
   } catch (error) {
     console.error("提交医生信息出错:", error);
     messagesRef.value.show("操作失败，请重试", "error");
@@ -398,12 +357,14 @@ const handleResize = () => {
 
 // 组件挂载时获取数据
 onMounted(async () => {
-  // 获取用户信息
   loading.value = true;
   try {
-    await fetchDoctorSchedule();
-    // 预加载所有医生信息
-    await fetchAllDoctors();
+    // 根据当前标签页获取相应的数据
+    if (activeTab.value === 'doctorList') {
+      await fetchDoctorList();
+    } else if (activeTab.value === 'schedule') {
+      await fetchDoctorSchedule();
+    }
   } catch (error) {
     console.error("加载数据出错:", error);
   } finally {
@@ -425,18 +386,8 @@ watch(selectedDate, () => {
 
 // 搜索处理函数
 const handleSearch = () => {
-  if (searchQuery.value.trim()) {
-    // 当有搜索词时，启用全局搜索
-    isGlobalSearch.value = true;
-    
-    // 如果还没有获取过所有医生数据，先获取
-    if (allDoctorsList.value.length === 0) {
-      fetchAllDoctors();
-    }
-  } else {
-    // 当搜索词为空时，恢复普通模式
-    isGlobalSearch.value = false;
-  }
+  // 医生列表的搜索直接在computed属性中处理
+  // 不需要额外的处理逻辑
 };
 </script>
 
@@ -970,6 +921,7 @@ h2 {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 

@@ -182,7 +182,7 @@ export default {
           icon: "ios-document",
           children: [
             { name: "trafficView", title: "平台流量统计", icon: "ios-document" },
-            { name: "doctorManager", title: "医生管理", icon: "ios-document" },
+            { name: "doctorManager", title: "医生管理", icon: "ios-person" },
           ],
         },
         {

@@ -372,8 +372,8 @@ onUnmounted(() => {
                             class="progress-bar" 
                             :style="{ width: `${Math.min(doctor.count / (chartData.hotDoctors[0]?.count || 1) * 100, 100)}%` }"
                           ></div>
-                          <span class="count-label">{{ doctor.count }}</span>
                         </div>
+                        <span class="count-label">{{ doctor.count }}</span>
                       </div>
                     </div>
                   </div>
@@ -1127,12 +1127,11 @@ button:disabled {
 }
 
 .count-label {
-  position: absolute;
-  right: 8px;
-  top: -1px;
   font-size: 12px;
   color: #333;
   font-weight: bold;
+  min-width: 30px;
+  text-align: right;
 }
 
 .empty-data {
