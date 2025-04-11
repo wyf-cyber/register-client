@@ -8,9 +8,9 @@ export function addDoctorService(department, doctor, detail, day) {
 }
 
 // 更新医生信息
-export function updateDoctorService(department, doctor, newDepartment, newDoctor, newDetail, day) {
+export function updateDoctorService(department, doctor, day, newDepartment, newDoctor, newDetail, newDay) {
   return request.get('/admin/updateDoctor', {
-    params: { department, doctor, newDepartment, newDoctor, newDetail, day }
+    params: { department, doctor, day, newDepartment, newDoctor, newDetail, newDay }
   });
 }
 

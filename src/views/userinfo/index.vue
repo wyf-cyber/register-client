@@ -72,13 +72,6 @@ const getStatusClass = (status) => {
   return `status-${status}`;
 };
 
-// 退出登录
-const handleLogout = () => {
-  sessionStorage.clear();
-  sessionStorage.setItem("isAuthenticated", "false");
-  alert("已退出登录");
-  router.push("/auth");
-};
 
 // 侧边栏折叠切换
 const toggleCollapse = () => {
@@ -86,9 +79,6 @@ const toggleCollapse = () => {
   sessionStorage.setItem("sidebarCollapsed", isCollapsed.value);
 };
 
-const toggleMobileMenu = () => {
-  showMobileMenu.value = !showMobileMenu.value;
-};
 
 // 根据路由设置初始菜单状态
 onMounted(async () => {

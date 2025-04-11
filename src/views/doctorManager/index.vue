@@ -5,14 +5,13 @@ import { useRouter } from "vue-router";
 import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
-import { getUserInfoService } from "@/views/userinfo/api";
+import Messages from "@/views/components/messages.vue";
 import { 
   addDoctorService, 
   updateDoctorService, 
   deleteDoctorService, 
   getDoctorsByDepartmentService, 
-  getDoctorScheduleService,
-  countAppointmentsService 
+  getDoctorScheduleService
 } from "@/views/doctorManager/api";
 
 // 格式化日期
@@ -36,11 +35,13 @@ const menuTheme = ref("dark"); // 菜单主题
 // 医生管理数据
 const activeTab = ref("doctorList"); // doctorList, addDoctor, schedule
 const doctorsList = ref([]);
+const allDoctorsList = ref([]); // 存储所有医生信息
 const scheduleList = ref([]);
 const selectedDate = ref(formatDate(new Date()));
 const departments = ref(['内科', '外科', '儿科', '眼科', '皮肤科', '妇科', '骨科', '神经科', '精神科', '口腔科']);
 const selectedDepartment = ref('全部');
 const searchQuery = ref('');
+const isGlobalSearch = ref(false); // 控制是否进行全局搜索
 
 // 新增/编辑医生的表单
 const doctorForm = reactive({
@@ -50,7 +51,16 @@ const doctorForm = reactive({
   day: formatDate(new Date()),
   isEdit: false,
   originalDepartment: '',
-  originalDoctor: ''
+  originalDoctor: '',
+  originalDay: ''
+});
+
+// 新增存储原始医生信息的变量，用于更新操作
+const originalDoctor = reactive({
+  department: '',
+  doctor: '',
+  day: '',
+  detail: ''
 });
 
 // 删除确认框
@@ -70,6 +80,9 @@ const doctorDetailModal = reactive({
   state: 0
 });
 
+// 消息通知引用
+const messagesRef = ref(null);
+
 // 菜单处理
 const handleMenuChange = (name) => {
   router.push({ name });
@@ -79,22 +92,10 @@ const changeMenu = (name) => {
   handleMenuChange(name);
 };
 
-// 退出登录
-const handleLogout = () => {
-  sessionStorage.clear();
-  sessionStorage.setItem("isAuthenticated", "false");
-  alert("已退出登录");
-  router.push("/auth");
-};
-
 // 侧边栏折叠切换
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
   sessionStorage.setItem("sidebarCollapsed", isCollapsed.value);
-};
-
-const toggleMobileMenu = () => {
-  showMobileMenu.value = !showMobileMenu.value;
 };
 
 // 添加计算属性，计算主内容区域的样式
@@ -108,7 +109,9 @@ const mainContentStyle = computed(() => {
 
 // 过滤后的医生列表
 const filteredDoctors = computed(() => {
-  let filtered = doctorsList.value;
+  // 确定使用哪个数据源
+  let sourceList = isGlobalSearch.value ? allDoctorsList.value : doctorsList.value;
+  let filtered = sourceList;
   
   // 按科室筛选
   if (selectedDepartment.value !== '全部') {
@@ -119,8 +122,8 @@ const filteredDoctors = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(doctor => 
-      doctor.doctor.toLowerCase().includes(query) || 
-      doctor.detail.toLowerCase().includes(query)
+      (doctor.doctor && doctor.doctor.toLowerCase().includes(query)) || 
+      (doctor.detail && doctor.detail.toLowerCase().includes(query))
     );
   }
   
@@ -141,10 +144,59 @@ const fetchDoctorSchedule = async () => {
   }
 };
 
+// 获取所有科室的医生信息
+const fetchAllDoctors = async () => {
+  loading.value = true;
+  try {
+    const allDoctors = [];
+    
+    // 遍历所有科室，获取各科室医生
+    for (const dept of departments.value) {
+      try {
+        const deptDoctors = await getDoctorsByDepartmentService(dept);
+        // 调试日志
+        console.log(`${dept}科室医生原始数据:`, deptDoctors);
+        
+        if (deptDoctors && deptDoctors.length > 0) {
+          // 添加科室信息到医生数据中
+          deptDoctors.forEach(doctor => {
+            // 确保work_date字段存在，如果不存在则使用当前选中日期
+            const doctorData = {
+              ...doctor,   // 解构医生对象
+              department: doctor.department || dept, // 确保科室信息正确
+              state: doctor.state || 0, // 确保状态信息存在
+              work_date: doctor.work_date || selectedDate.value // 确保工作日期存在
+            };
+            
+            allDoctors.push(doctorData);
+          });
+        }
+      } catch (deptError) {
+        console.error(`获取${dept}科室医生出错:`, deptError);
+      }
+    }
+    
+    allDoctorsList.value = allDoctors;
+    console.log("已获取所有医生信息:", allDoctorsList.value);
+  } catch (error) {
+    console.error("获取所有医生信息出错:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
 // 切换标签页
 const switchTab = (tab) => {
   activeTab.value = tab;
-  if (tab === 'doctorList' || tab === 'schedule') {
+  if (tab === 'doctorList') {
+    // 切换到医生列表时，需要同时获取当前日期的排班数据和全局医生数据
+    fetchDoctorSchedule();
+    
+    // 如果之前已有全局搜索，则刷新全局医生列表
+    if (isGlobalSearch.value || allDoctorsList.value.length === 0) {
+      fetchAllDoctors();
+    }
+  } else if (tab === 'schedule') {
     fetchDoctorSchedule();
   } else if (tab === 'addDoctor') {
     // 重置表单
@@ -153,9 +205,15 @@ const switchTab = (tab) => {
       doctor: '',
       detail: '',
       day: formatDate(new Date()),
-      isEdit: false,
-      originalDepartment: '',
-      originalDoctor: ''
+      isEdit: false
+    });
+    
+    // 重置原始医生信息
+    Object.assign(originalDoctor, {
+      department: '',
+      doctor: '',
+      day: '',
+      detail: ''
     });
   }
 };
@@ -176,12 +234,15 @@ const deleteDoctor = async () => {
       deleteModal.doctor, 
       deleteModal.day
     );
-    alert("医生信息删除成功");
+    messagesRef.value.show("医生信息删除成功", "success");
     deleteModal.visible = false;
+    
+    // 更新所有医生数据
     fetchDoctorSchedule();
+    fetchAllDoctors(); // 更新全局医生列表
   } catch (error) {
     console.error("删除医生信息出错:", error);
-    alert("删除医生信息失败，请重试");
+    messagesRef.value.show("删除医生信息失败，请重试", "error");
   } finally {
     loading.value = false;
   }
@@ -189,15 +250,50 @@ const deleteDoctor = async () => {
 
 // 编辑医生信息
 const editDoctor = (doctor) => {
+  // 调试日志，查看doctor对象原始数据
+  console.log("编辑医生原始数据:", doctor);
+  
+  // 关键点：确保工作日期是正确的
+  // 如果是从全局医生列表编辑，必须使用当前选中日期作为work_date
+  // 如果是从排班表编辑，则直接使用doctor.work_date
+  const workDate = doctor.work_date || selectedDate.value;
+  
+  // 记录日志，帮助调试
+  console.log("使用的工作日期:", workDate);
+  
+  // 存储原始医生信息，这些信息将用作数据库查询条件
+  Object.assign(originalDoctor, {
+    department: doctor.department,
+    doctor: doctor.doctor,
+    day: workDate,
+    detail: doctor.detail
+  });
+  
+  // 设置表单数据，这些将是用户可以编辑的新值
   Object.assign(doctorForm, {
     department: doctor.department,
     doctor: doctor.doctor,
     detail: doctor.detail,
-    day: doctor.work_date || selectedDate.value,
-    isEdit: true,
-    originalDepartment: doctor.department,
-    originalDoctor: doctor.doctor
+    day: workDate,
+    isEdit: true
   });
+  
+  // 记录表单数据日志，方便调试
+  console.log("编辑数据:", {
+    原始数据: {
+      科室: originalDoctor.department,
+      医生: originalDoctor.doctor,
+      日期: originalDoctor.day,
+      详情: originalDoctor.detail
+    },
+    表单数据: {
+      科室: doctorForm.department,
+      医生: doctorForm.doctor,
+      日期: doctorForm.day,
+      详情: doctorForm.detail
+    }
+  });
+  
   activeTab.value = 'addDoctor';
 };
 
@@ -215,37 +311,76 @@ const viewDoctorDetail = (doctor) => {
 // 提交医生表单
 const submitDoctorForm = async () => {
   if (!doctorForm.department || !doctorForm.doctor || !doctorForm.detail || !doctorForm.day) {
-    alert("请填写完整的医生信息");
+    messagesRef.value.show("请填写完整的医生信息", "warning");
     return;
   }
   
   loading.value = true;
   try {
     if (doctorForm.isEdit) {
-      // 更新医生信息
-      await updateDoctorService(
-        doctorForm.originalDepartment,
-        doctorForm.originalDoctor,
-        doctorForm.department,
-        doctorForm.doctor,
-        doctorForm.detail,
-        doctorForm.day
+      // 检查原始数据是否完整
+      if (!originalDoctor.department || !originalDoctor.doctor || !originalDoctor.day) {
+        messagesRef.value.show("缺少原始医生信息，无法更新", "error");
+        console.error("缺少原始医生信息:", originalDoctor);
+        return;
+      }
+      
+      // 更新前记录日志
+      console.log("准备更新医生信息:", {
+        原始数据: {
+          科室: originalDoctor.department,
+          医生: originalDoctor.doctor,
+          日期: originalDoctor.day
+        },
+        新数据: {
+          科室: doctorForm.department,
+          医生: doctorForm.doctor,
+          详情: doctorForm.detail,
+          日期: doctorForm.day
+        }
+      });
+      
+      // SQL调试日志 - 显示预期的SQL查询条件
+      // alert(`预期执行的SQL: UPDATE doctors SET department='${doctorForm.department}', doctor='${doctorForm.doctor}', detail='${doctorForm.detail}', work_date='${doctorForm.day}' WHERE department='${originalDoctor.department}' AND doctor='${originalDoctor.doctor}' AND work_date='${originalDoctor.day}'`);
+      
+      // 注意：参数顺序必须与后端API一致
+      // 后端方法签名：updateDoctor(String department, String doctor, String day, String newDepartment, String newDoctor, String newDetail, String newDay)
+      const response = await updateDoctorService(
+        originalDoctor.department,  // 原科室 - 查询键
+        originalDoctor.doctor,      // 原医生 - 查询键
+        originalDoctor.day,         // 原日期 - 查询键
+        doctorForm.department,      // 新科室 - 新值
+        doctorForm.doctor,          // 新医生 - 新值
+        doctorForm.detail,          // 新详情 - 新值
+        doctorForm.day              // 新日期 - 新值
       );
-      alert("医生信息更新成功");
+      
+      console.log("更新返回结果:", response);
+      messagesRef.value.show("医生信息更新成功", "success");
     } else {
       // 添加新医生
-      await addDoctorService(
+      const response = await addDoctorService(
         doctorForm.department,
         doctorForm.doctor,
         doctorForm.detail,
         doctorForm.day
       );
-      alert("医生信息添加成功");
+      console.log("添加返回结果:", response);
+      messagesRef.value.show("医生信息添加成功", "success");
     }
+    
+    // 先切换标签页，确保日期已设置正确
     switchTab('doctorList');
+    
+    // 由于后端数据库使用 department, doctor, work_date 作为联合主键
+    // 更新完成后需要刷新当前日期下的排班数据
+    await fetchDoctorSchedule();
+    
+    // 同时刷新全局医生列表
+    await fetchAllDoctors();
   } catch (error) {
     console.error("提交医生信息出错:", error);
-    alert("操作失败，请重试");
+    messagesRef.value.show("操作失败，请重试", "error");
   } finally {
     loading.value = false;
   }
@@ -267,6 +402,8 @@ onMounted(async () => {
   loading.value = true;
   try {
     await fetchDoctorSchedule();
+    // 预加载所有医生信息
+    await fetchAllDoctors();
   } catch (error) {
     console.error("加载数据出错:", error);
   } finally {
@@ -285,11 +422,30 @@ onUnmounted(() => {
 watch(selectedDate, () => {
   fetchDoctorSchedule();
 });
+
+// 搜索处理函数
+const handleSearch = () => {
+  if (searchQuery.value.trim()) {
+    // 当有搜索词时，启用全局搜索
+    isGlobalSearch.value = true;
+    
+    // 如果还没有获取过所有医生数据，先获取
+    if (allDoctorsList.value.length === 0) {
+      fetchAllDoctors();
+    }
+  } else {
+    // 当搜索词为空时，恢复普通模式
+    isGlobalSearch.value = false;
+  }
+};
 </script>
 
 <template>
   <div class="layout">
     <PageHeader class="layout-header" />
+    
+    <!-- 消息通知组件 -->
+    <Messages ref="messagesRef" />
     
     <!-- 新增布局容器 -->
     <div class="layout-container">
@@ -357,7 +513,12 @@ watch(selectedDate, () => {
                     type="text"
                     placeholder="搜索医生姓名或介绍..."
                     v-model="searchQuery"
+                    @keyup.enter="handleSearch"
                   />
+                  <button class="search-btn" @click="handleSearch">
+                    <i class="ivu-icon ivu-icon-ios-search"></i>
+                    搜索
+                  </button>
                 </div>
                 <div class="department-filter">
                   <label>科室：</label>
@@ -446,7 +607,8 @@ watch(selectedDate, () => {
                       <th>医生</th>
                       <th>介绍</th>
                       <th>预约状态</th>
-                      <th>操作</th>
+                      <th>编辑</th>
+                      <th>删除</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -461,6 +623,8 @@ watch(selectedDate, () => {
                       </td>
                       <td>
                         <button class="edit-btn small" @click="editDoctor(doctor)">编辑</button>
+                      </td>
+                      <td>
                         <button class="delete-btn small" @click="confirmDeleteDoctor(doctor.department, doctor.doctor, doctor.work_date || selectedDate)">删除</button>
                       </td>
                     </tr>
@@ -702,12 +866,40 @@ h2 {
   gap: 15px;
 }
 
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .search-box input {
   padding: 10px 15px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
   width: 300px;
   font-size: 14px;
+}
+
+.search-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 15px;
+  background: #2daa9e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.search-btn:hover {
+  background: #248f85;
+}
+
+.search-btn i {
+  font-size: 16px;
 }
 
 .department-filter {
@@ -792,16 +984,15 @@ h2 {
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 12px;
-  background: #67c23a;
-  color: white;
+  color: #67c23a;
 }
 
 .status-busy {
-  background: #e6a23c;
+  color: #e6a23c;
 }
 
 .status-free {
-  background: #67c23a;
+  color: #67c23a;
 }
 
 .work-date {
@@ -1003,11 +1194,25 @@ td {
   border-bottom: 1px solid #ebeef5;
 }
 
+/* 操作按钮列的宽度控制 */
+th:nth-last-child(-n+2), 
+td:nth-last-child(-n+2) {
+  width: 100px;
+  text-align: center;
+  padding: 8px;
+}
+
 .detail-cell {
   max-width: 300px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.small {
+  padding: 4px 8px;
+  font-size: 12px;
+  min-width: 60px;
 }
 
 /* 模态框 */
