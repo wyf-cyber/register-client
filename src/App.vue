@@ -1,9 +1,6 @@
 <script setup>
-// import ApiVue from './Api.vue'
-// import MyAppointment from './MyAppointments.vue'
-// import HealthRecords from './HealthRecords.vue'
-// import Navbar from './Navbar.vue'
-import { ref, provide } from 'vue'
+import { ref, provide, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Messages from '@/views/components/messages.vue'
 
 const messages = ref(null)
@@ -14,9 +11,15 @@ const showNotification = (message, type = 'success') => {
     messages.value.show(message, type)
   }
 }
-
-// 向所有子组件提供这个方法
 provide('showNotification', showNotification)
+
+// 监听路由变化，刷新页面
+const route = useRoute()
+watch(route, (to, from) => {
+  if (to.name !== from.name) {
+    window.location.reload()
+  }
+})
 </script>
 
 <template>
@@ -25,7 +28,3 @@ provide('showNotification', showNotification)
     <router-view />
   </div>
 </template>
-
-<style scoped>
-
-</style>

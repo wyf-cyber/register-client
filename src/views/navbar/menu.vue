@@ -34,7 +34,7 @@
       <!-- 使用 Element UI 菜单组件 -->
       <el-menu
         :default-active="$route.name"
-        :default-openeds="openNames"
+        :default-openeds="currentOpenedMenu"
         :collapse="shrink"
         :unique-opened="true"
         :background-color="bgColor"
@@ -42,6 +42,8 @@
         :active-text-color="activeTextColor"
         class="el-menu-vertical"
         @select="handleChange"
+        @open="handleOpen"
+        @close="handleClose"
       >
         <template v-for="item in activeMenuList" :key="item.name">
           <el-sub-menu v-if="item.children && item.children.length" :index="item.name">
@@ -233,6 +235,7 @@ export default {
      * 菜单变化时触发
      * @param {string} name - 菜单名称
      */
+    // 在handleChange方法中添加强制刷新逻辑
     handleChange(name) {
       let willpush = true;
       // 如果 beforePush 存在，则调用 beforePush 方法
@@ -241,53 +244,62 @@ export default {
           willpush = false;
         }
       }
-      // 如果点击的是个人资料，则跳转到个人资料页面
-      if (name === "profile") {
-        this.$router.push({
-          name: "profile"
-        });
+      
+      // 确定要跳转的路由名称
+      let targetRoute = name;
+      
+      // 找到当前选中菜单项所属的父菜单
+      let parentMenu = null;
+      for (const item of this.activeMenuList) {
+        if (item.children && item.children.some(child => child.name === name)) {
+          parentMenu = item.name;
+          break;
+        }
       }
-      // 如果点击的是账号设置，则跳转到账号设置页面
-      if (name === "settings") {
-        this.$router.push({
-          name: "settings"
-        });
-      }
-      // 如果点击的是挂号流量统计，则跳转到挂号流量统计页面
-      if (name === "trafficView") {
-        this.$router.push({
-          name: "trafficView"
-        });
-      }
-      // 如果点击的是AI问诊助手，则跳转到AI问诊助手页面
-      if (name === "assistant") {
-        this.$router.push({
-          name: "assistant"
-        });
-      }
-      // 如果点击的页面未知（未在菜单列表中），跳转至404页面
-      if (true) {
-        this.$router.push({
-          name: "error404"
-        });
+      
+      // 如果找到父菜单，将其保存到sessionStorage
+      if (parentMenu) {
+        this.currentOpenedMenu = [parentMenu];
+        sessionStorage.setItem('openedMenuItems', JSON.stringify(this.currentOpenedMenu));
       }
       
       if (willpush) {
-        // 存储当前展开的菜单项到sessionStorage
-        for (const item of this.activeMenuList) {
-          if (item.children && item.children.some(child => child.name === name)) {
-            // 保存父菜单名称
-            this.currentOpenedMenu = [item.name];
-            sessionStorage.setItem('openedMenuItems', JSON.stringify(this.currentOpenedMenu));
-            break;
-          }
-        }
-        
         this.$router.push({
-          name: name
+          name: targetRoute
+        }).then(() => {
+          // 添加强制刷新逻辑
+          if (this.$route.name === targetRoute) {
+            window.location.reload(); // 或使用 nextTick + 组件key更新
+          }
         });
       }
+      
       this.$emit("on-change", name);
+    },
+    
+    /**
+     * 处理子菜单展开事件
+     * @param {string} index - 菜单索引
+     */
+    handleOpen(index) {
+      // 更新当前展开的菜单到sessionStorage
+      if (!this.currentOpenedMenu.includes(index)) {
+        this.currentOpenedMenu.push(index);
+        sessionStorage.setItem('openedMenuItems', JSON.stringify(this.currentOpenedMenu));
+      }
+    },
+    
+    /**
+     * 处理子菜单关闭事件
+     * @param {string} index - 菜单索引
+     */
+    handleClose(index) {
+      // 从展开菜单列表中移除
+      const i = this.currentOpenedMenu.indexOf(index);
+      if (i > -1) {
+        this.currentOpenedMenu.splice(i, 1);
+        sessionStorage.setItem('openedMenuItems', JSON.stringify(this.currentOpenedMenu));
+      }
     },
     
     /**
@@ -327,18 +339,34 @@ export default {
     }
   },
   mounted() {
-    // 恢复展开的菜单状态
-    if (this.currentOpenedMenu.length > 0) {
-      this.$nextTick(() => {
-        // 确保菜单组件已完全加载
-        setTimeout(() => {
-          // 直接设置默认展开项，避免动画
-          const menuEl = document.querySelector('.el-menu');
-          if (menuEl && menuEl.__vue__) {
-            menuEl.__vue__.openedMenus = this.currentOpenedMenu;
+    // 从当前路由确定需要展开的菜单
+    if (this.$route.name) {
+      for (const item of this.activeMenuList) {
+        if (item.children && item.children.some(child => child.name === this.$route.name)) {
+          if (!this.currentOpenedMenu.includes(item.name)) {
+            this.currentOpenedMenu.push(item.name);
+            sessionStorage.setItem('openedMenuItems', JSON.stringify(this.currentOpenedMenu));
           }
-        }, 0);
-      });
+          break;
+        }
+      }
+    }
+  },
+  
+  // 监听路由变化，同步更新菜单展开状态
+  watch: {
+    '$route'(to) {
+      if (to.name) {
+        for (const item of this.activeMenuList) {
+          if (item.children && item.children.some(child => child.name === to.name)) {
+            if (!this.currentOpenedMenu.includes(item.name)) {
+              this.currentOpenedMenu = [item.name];
+              sessionStorage.setItem('openedMenuItems', JSON.stringify(this.currentOpenedMenu));
+            }
+            break;
+          }
+        }
+      }
     }
   }
 };

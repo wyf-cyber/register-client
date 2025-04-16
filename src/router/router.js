@@ -5,6 +5,7 @@ import Profile from '@/views/userinfo/index.vue'; // 新增个人资料页面组
 import TrafficView from '@/views/trafficView/index.vue'; // 新增挂号流量统计页面组件
 import Assistant from '@/views/assistant/index.vue'; // 新增AI问诊助手页面组件
 import DoctorManager from '@/views/doctorManager/index.vue'; // 新增医生管理页面组件
+import Register from '@/views/register/index.vue'; // 新增预约挂号页面组件
 
 import Error404 from '@/views/template/404.vue';
 import Error403 from '@/views/template/403.vue';
@@ -31,6 +32,12 @@ const routes = [
     path: '/profile',
     name: 'profile',
     component: Profile,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: Register, 
     meta: { requiresAuth: true }
   },
   {
