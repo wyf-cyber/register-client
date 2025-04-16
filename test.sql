@@ -11,7 +11,7 @@
  Target Server Version : 80037 (8.0.37)
  File Encoding         : 65001
 
- Date: 11/04/2025 19:23:48
+ Date: 16/04/2025 19:28:57
 */
 
 SET NAMES utf8mb4;
@@ -26,16 +26,17 @@ CREATE TABLE `appointment`  (
   `department` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `doctor` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `register_day` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `day` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `time` int NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of appointment
 -- ----------------------------
-INSERT INTO `appointment` VALUES (11, '内科', '何亮', 'wyf_2', '2024-12-05', 1733322811);
-INSERT INTO `appointment` VALUES (12, '内科', '何亮', '王逸飞', '2024-12-05', 1733325906);
+INSERT INTO `appointment` VALUES (1, '皮肤科', '刘杰', 'whu', '2025-04-16', '2025-04-15', 1744793679);
+INSERT INTO `appointment` VALUES (2, '儿科', '李涛', 'whu', '2025-04-16', '2025-04-15', 1744793951);
 
 -- ----------------------------
 -- Table structure for doctors
@@ -54,7 +55,7 @@ CREATE TABLE `doctors`  (
 -- ----------------------------
 -- Records of doctors
 -- ----------------------------
-INSERT INTO `doctors` VALUES (1, '内科', '李明', '擅长治疗高血压和糖尿病等常见慢性病，关注慢性病患者的长期管理。', 5, '2025-04-11');
+INSERT INTO `doctors` VALUES (1, '内科', '李华', '擅长治疗高血压和糖尿病等常见慢性病，关注慢性病患者的长期管理。', 5, '2025-04-11');
 INSERT INTO `doctors` VALUES (2, '儿科', '张娜', '在儿童传染病和免疫接种方面具有丰富经验，尤其擅长处理小儿流感和肺炎。', 2, '2025-04-11');
 INSERT INTO `doctors` VALUES (3, '外科', '刘建国', '资深外科专家，擅长急腹症手术和大肠肿瘤手术治疗。', 0, '2025-04-11');
 INSERT INTO `doctors` VALUES (4, '眼科', '张旭', '眼科专家，擅长白内障手术和老年人眼科疾病的治疗。', 1, '2025-04-11');
@@ -90,7 +91,7 @@ INSERT INTO `doctors` VALUES (33, '眼科', '周丽', '专注于眼底疾病，�
 INSERT INTO `doctors` VALUES (34, '皮肤科', '吴丽', '擅长诊治皮肤过敏，特别是在皮肤激光治疗方面有丰富经验。', 5, '2025-04-13');
 INSERT INTO `doctors` VALUES (35, '内科', '田刚', '内科疾病，特别是呼吸系统疾病的诊治专家。', 0, '2025-04-13');
 INSERT INTO `doctors` VALUES (36, '儿科', '张丽', '儿童营养专家，擅长小儿营养与疾病预防。', 2, '2025-04-13');
-INSERT INTO `doctors` VALUES (37, '内科', '杨青', '肾脏病专家，擅长治疗慢性肾脏病及肾透析的管理。', 1, '2025-04-14');
+INSERT INTO `doctors` VALUES (37, '内科', '杨青', '肾脏病专家，擅长治疗慢性肾脏病及肾透析的管理。', 1, '2025-04-15');
 INSERT INTO `doctors` VALUES (38, '儿科', '高鑫', '在儿童发育和成长方面有深入研究，擅长婴儿体重管理。', 2, '2025-04-14');
 INSERT INTO `doctors` VALUES (39, '外科', '邱峰', '胸外科专家，擅长肺癌和食道癌的手术治疗。', 3, '2025-04-14');
 INSERT INTO `doctors` VALUES (40, '眼科', '孙悦', '致力于近视、白内障及眼底病的临床诊治与手术。', 4, '2025-04-14');
@@ -111,17 +112,17 @@ INSERT INTO `doctors` VALUES (54, '内科', '贾磊', '心血管内科专家，�
 INSERT INTO `doctors` VALUES (55, '儿科', '李飞', '专注于小儿生长发育和常见疾病的预防与治疗。', 2, '2025-04-15');
 INSERT INTO `doctors` VALUES (56, '外科', '黄珊', '外科手术专家，尤其擅长妇科手术和乳腺癌治疗。', 3, '2025-04-15');
 INSERT INTO `doctors` VALUES (57, '眼科', '唐敏', '青光眼专家，擅长眼科手术和眼病的早期诊断。', 2, '2025-04-15');
-INSERT INTO `doctors` VALUES (58, '皮肤科', '刘杰', '皮肤病专家，擅长治疗湿疹、皮肤瘙痒等常见问题。', 0, '2025-04-15');
+INSERT INTO `doctors` VALUES (58, '皮肤科', '刘杰', '皮肤病专家，擅长治疗湿疹、皮肤瘙痒等常见问题。', 1, '2025-04-15');
 INSERT INTO `doctors` VALUES (59, '内科', '吴志', '老年病专家，擅长治疗各种老年慢性病。', 4, '2025-04-15');
-INSERT INTO `doctors` VALUES (60, '儿科', '李涛', '专注于儿童胃肠病和呼吸系统疾病。', 0, '2025-04-15');
-INSERT INTO `doctors` VALUES (61, '内科', '何亮', '内科专家，擅长呼吸系统疾病的诊治，尤其是哮喘和COPD的管理。', 0, '2025-04-16');
-INSERT INTO `doctors` VALUES (62, '儿科', '李磊', '儿童免疫学专家，擅长管理儿童的疫苗接种与预防接种。', 0, '2025-04-16');
+INSERT INTO `doctors` VALUES (60, '儿科', '李涛', '专注于儿童胃肠病和呼吸系统疾病。', 1, '2025-04-15');
+INSERT INTO `doctors` VALUES (61, '内科', '何亮', '内科专家，擅长呼吸系统疾病的诊治，尤其是哮喘和COPD的管理。', 1, '2025-04-16');
+INSERT INTO `doctors` VALUES (62, '儿科', '李磊', '儿童免疫学专家，擅长管理儿童的疫苗接种与预防接种。', 1, '2025-04-16');
 INSERT INTO `doctors` VALUES (63, '外科', '程宇', '胃肠外科专家，擅长消化道肿瘤的外科手术治疗。', 5, '2025-04-16');
 INSERT INTO `doctors` VALUES (64, '眼科', '邓子豪', '擅长青光眼、视网膜脱落的诊断与治疗。', 3, '2025-04-16');
 INSERT INTO `doctors` VALUES (65, '皮肤科', '吴敏', '专注于过敏性皮肤病，尤其擅长荨麻疹和湿疹的治疗。', 2, '2025-04-16');
 INSERT INTO `doctors` VALUES (66, '内科', '唐涛', '专注于肾脏病和糖尿病管理。', 2, '2025-04-16');
 INSERT INTO `doctors` VALUES (67, '儿科', '刘英', '擅长儿童神经系统疾病，尤其是癫痫。', 1, '2025-04-16');
-INSERT INTO `doctors` VALUES (68, '外科', '沈波', '擅长泌尿系统手术和妇科手术。', 0, '2025-04-16');
+INSERT INTO `doctors` VALUES (68, '外科', '沈波', '擅长泌尿系统手术和妇科手术。', 1, '2025-04-16');
 INSERT INTO `doctors` VALUES (69, '眼科', '蒋晓', '眼科专家，专注于眼睛的屈光手术和常见眼病治疗。', 4, '2025-04-16');
 INSERT INTO `doctors` VALUES (70, '皮肤科', '任敏', '皮肤美容专家，专注治疗各种皮肤问题，如痤疮和皮肤过敏。', 1, '2025-04-16');
 INSERT INTO `doctors` VALUES (71, '内科', '赵倩', '专注于心血管疾病和呼吸系统疾病的治疗。', 3, '2025-04-16');
