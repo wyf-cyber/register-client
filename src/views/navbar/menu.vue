@@ -206,7 +206,7 @@ export default {
           icon: "ios-calendar",
           children: [
             { name: "register", title: "预约挂号", icon: "ios-navigate" },
-            { name: "evaluate", title: "医生评价", icon: "ios-search" },
+            { name: "comments", title: "医生评价", icon: "ios-search" },
           ],
         },
         {
