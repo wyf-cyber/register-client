@@ -473,9 +473,30 @@ watch(() => searchFilters.date, (newDate) => {
 /* --- Base Layout, Header, Sider, Main (Assume identical to previous) --- */
 .layout { min-height: 100vh; display: flex; flex-direction: column; width: 100%; overflow-x: hidden; background-color: #f5f7fa; }
 .layout-header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
-.layout-container { display: flex; position: fixed; left: 0; right: 0; bottom: 0; flex-direction: row; margin-top: 60px; height: calc(100vh - 60px); width: 100%; background-color: #f5f7fa; }
-.layout-sider { width: 200px; height: 100%; flex-shrink: 0; background: #2daa9e; transition: width 0.3s ease; box-shadow: 2px 0 6px rgba(0,0,0,0.1); position: relative; &.collapsed { width: 80px; } }
-.layout-main { flex: 1; padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; background: #f5f7fa; transition: margin-left 0.3s ease; }
+.layout-container { 
+  display: flex; 
+  position: fixed; 
+  left: 0; 
+  right: 0; 
+  bottom: 0; 
+  flex-direction: row; 
+  top: 60px; /* 修改：使用top替代margin-top，确保精确定位 */
+  height: calc(100vh - 60px); 
+  width: 100%; 
+  background-color: #f5f7fa; 
+}
+.layout-sider { 
+  width: 200px; 
+  height: 100%; 
+  flex-shrink: 0; 
+  background: #2daa9e; 
+  transition: all 0.8s ease; /* 修改：从0.3s改为0.8s，与评论区页面保持一致 */
+  box-shadow: 2px 0 6px rgba(0,0,0,0.1); 
+  position: relative;
+  top: 0; /* 确保从容器顶部开始 */
+  &.collapsed { width: 80px; } 
+}
+.layout-main { flex: 1; padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; background: #f5f7fa; transition: margin-left 0.8s ease; /* 修改：从0.3s改为0.8s，保持一致 */ }
 
 h1 { margin-bottom: 30px; color: #343a40; text-align: center; font-size: 28px; font-weight: bold; }
 .content-wrapper { max-width: 1200px; margin: 0 auto; padding: 20px; }
@@ -532,7 +553,23 @@ h1 { margin-bottom: 30px; color: #343a40; text-align: center; font-size: 28px; f
 
 /* Responsive */
 @media screen and (max-width: 768px) {
-  .layout-main { margin-left: 0 !important; width: 100% !important; }
+  .layout-container {
+    flex-direction: column;
+  }
+  .layout-sider {
+    width: 100% !important;
+    height: auto;
+    &.collapsed {
+      display: none;
+    }
+    &.mobile-open {
+      display: block;
+    }
+  }
+  .layout-main { 
+    margin-left: 0 !important; 
+    width: 100% !important; 
+  }
   .filter-bar { flex-direction: column; align-items: stretch; }
   .filter-item { width: 100%; justify-content: space-between; select, input { flex-grow: 1; min-width: 0; } button.search-btn { width: 100%; justify-content: center; } }
   .doctors-grid { grid-template-columns: 1fr; }
