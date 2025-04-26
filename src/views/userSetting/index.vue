@@ -267,12 +267,9 @@ const mainContentStyle = computed(() => {
   <div class="layout">
     <PageHeader class="layout-header" />
     <Messages />
-    
-    <!-- 新增布局容器 -->
     <div class="layout-container">
-      <!-- 侧边栏 -->
       <div class="layout-sider" :class="{ collapsed: isCollapsed, 'mobile-open': showMobileMenu }">
-        <ShrinkableMenu 
+        <ShrinkableMenu
           :shrink="isCollapsed"
           :theme="menuTheme"
           :open-names="singleOpenName"
@@ -283,61 +280,62 @@ const mainContentStyle = computed(() => {
           :userRole="userRole"
           :isAdmin="isAdmin"
           @on-change="changeMenu"
-          @on-mobile-toggle="handleMobileToggle"
+          @on-mobile-toggle="toggleMobileMenu"
           @on-shrink="toggleCollapse"
         />
       </div>
-      
       <!-- 页面内容 -->
       <div class="layout-main" :style="mainContentStyle">
-        <div class="content-wrapper">
-          <h1>个人账号设置</h1>
-          <div class="settings-container">
-            <div class="settings-left">
-              <h2>修改账号设置</h2>
-              <div class="form-group">
-                <label for="username">修改用户名</label>
-                <input id="username" v-model="newUsername" type="text" placeholder="输入新用户名" maxlength="20" />
-                <button @click="openModal('username')" :disabled="loading">修改用户名</button>
-              </div>
-              <div class="form-group">
-                <label for="password">修改密码</label>
-                <input id="password" v-model="newPassword" type="password" placeholder="输入新密码" maxlength="20" />
-                <button @click="openModal('password')" :disabled="loading">修改密码</button>
-              </div>
+    <div class="soft-card">
+      <div class="card-header">
+        <h1>个人账号设置</h1>
+      </div>
+      <div class="card-body">
+        <div class="settings-container">
+          <div class="card-item">
+            <h2 class="section-title">账号设置</h2>
+            <div class="form-group">
+              <label for="username">修改用户名</label>
+              <input id="username" v-model="newUsername" type="text" placeholder="输入新用户名" maxlength="20" class="input-field" />
+              <button class="btn-soft" @click="openModal('username')" :disabled="loading">修改用户名</button>
             </div>
-            <div class="divider"></div>
-            <div class="settings-right">
-              <div class="form-group-rightup">
-                <label for="email">绑定邮箱号</label>
-                <input id="email" v-model="newEmail" type="text" placeholder="输入新邮箱号" maxlength="40" />
-                <button @click="openModal('email')" :disabled="loading">绑定邮箱号</button>
-              </div>
-              <!-- 注销账号 -->
-              <div class="form-group-rightdown">
-                <button @click="handleLogout" class="logout-btn" :disabled="loading">退出登录</button>
-                <button @click="openModal('delete')" class="delete-btn" :disabled="loading">注销账号</button>
-              </div>
+            <div class="form-group">
+              <label for="password">修改密码</label>
+              <input id="password" v-model="newPassword" type="password" placeholder="输入新密码" maxlength="20" class="input-field" />
+              <button class="btn-soft" @click="openModal('password')" :disabled="loading">修改密码</button>
             </div>
-          </div>
-          <div v-if="showConfirmationModal" class="modal">
-            <div class="modal-content">
-              <h2>确认修改</h2>
-              <p>请输入当前密码以确认操作</p>
-              <input v-model="confirmPassword" type="password" placeholder="输入当前密码" />
-              <div class="modal-actions">
-                <button @click="handleConfirm" :disabled="loading">
-                  <CircleLoading v-if="loading" /> {{ loading ? "处理中..." : "确认" }}
-                </button>
-                <button @click="closeModal" :disabled="loading">取消</button>
-              </div>
+            <div class="form-group">
+              <label for="email">绑定邮箱号</label>
+              <input id="email" v-model="newEmail" type="text" placeholder="输入新邮箱号" maxlength="40" class="input-field" />
+              <button class="btn-soft" @click="openModal('email')" :disabled="loading">绑定邮箱号</button>
+            </div>
+            <div class="form-group form-group--actions">
+              <button class="btn-outline" @click="handleLogout" :disabled="loading">退出登录</button>
+              <button class="btn-outline" @click="openModal('delete')" :disabled="loading">注销账号</button>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <div v-if="showConfirmationModal" class="modal">
+      <div class="modal-content">
+        <h2>确认修改</h2>
+        <p>请输入当前密码以确认操作</p>
+        <input v-model="confirmPassword" type="password" placeholder="输入当前密码" class="input-field" />
+        <div class="modal-actions">
+          <button class="btn-soft" @click="handleConfirm" :disabled="loading">
+            <CircleLoading v-if="loading" /> {{ loading ? "处理中..." : "确认" }}
+          </button>
+          <button class="btn-outline" @click="closeModal" :disabled="loading">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    </div>
   </div>
 </template>
+
 
 <style lang="less" scoped>
 .layout {
@@ -403,217 +401,219 @@ const mainContentStyle = computed(() => {
   }
 }
 
-@media screen and (max-width: 768px) {
-  .layout {
-    &-container {
-      flex-direction: column;
-    }
-    
-    &-sider {
-      width: 100% !important;
-      height: auto;
-      
-      &.collapsed {
-        display: none;
-      }
-      
-      &.mobile-open {
-        display: block;
-      }
-    }
-  }
+
+.layout-main {
+  display: flex;
+  justify-content: center;
+  padding: 60px 20px;
+  min-height: 100vh;
+  background: #f0f8ff;
 }
 
-.sidebar-shrink-button {
-  position: absolute;
-  right: -15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #dedbdb;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  z-index: 1001;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-  }
+.soft-card {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 12px 32px rgba(116, 185, 255, 0.15);
+  overflow: hidden;
+  width: 100%;
+  max-width: 1000px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #6495ed, #9370db);
+  padding: 40px 30px;
+  text-align: center;
+  color: #ffffff;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 4px 16px rgba(100, 149, 237, 0.1);
+}
+
+.card-header h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.card-body {
+  padding: 40px 50px;
+  display: grid;
+  gap: 40px;
 }
 
 .settings-container {
-  display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: 30px;
-  justify-content: space-between;
-  margin-top: 20px;
 }
 
-.settings-left, .settings-right {
-  flex: 1;
-  min-width: 280px;
+.card-item {
+  flex: none;
+  min-width: auto;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto; /* 水平居中 */
+}
+
+.section-title {
+  text-align: center; /* 标题居中 */
+  border-left: none; /* 移除左侧边框 */
+  padding-left: 0;
+  border-bottom: 4px solid #74b9ff; /* 改为底部边框 */
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: #4a4a4a;
+  font-weight: 500;
+}
+
+.input-field {
+  width: 100%;
+  padding: 14px 20px;
+  border: 2px solid #e0e8ff;
+  border-radius: 18px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #f5f9ff;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #74b9ff;
+  box-shadow: 0 0 16px rgba(116, 185, 255, 0.2);
+  background: #ffffff;
 }
 
 .divider {
-  width: 1px;
-  background-color: #e0e0e0;
-  margin: 0 10px;
+  display: none;
 }
 
-@media screen and (max-width: 768px) {
-  .settings-container {
-    flex-direction: column;
-  }
-  
-  .divider {
-    display: none;
-  }
-  
-  .settings-left, .settings-right {
-    width: 100%;
-  }
-}
-
-h1 {
-  margin-bottom: 30px;
-  color: #343a40;
-  text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-h2 {
-  font-size: 20px;
-  margin-bottom: 20px;
-  font-weight: bold;
-}
-
-.form-group,
-.form-group-rightup,
-.form-group-rightdown {
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group-rightdown {
-  flex-direction: row;
-  gap: 30px;
-}
-
-label {
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #495057;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ced4da;
-  border-radius: 5px;
-  font-size: 16px;
-  outline: none;
-  max-width: 400px;
-}
-
-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-}
-
-button {
-  padding: 10px 15px;
-  margin-top: 10px;
-  background-color: #007bff;
-  color: white;
+.btn-soft {
+  width: fit-content;
+  margin-top: 16px;
+  padding: 14px 32px;
   border: none;
-  border-radius: 5px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  color: white;
   font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
-  align-self: flex-start;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 12px rgba(116, 185, 255, 0.2);
 }
 
-button:hover {
-  background-color: #0056b3;
+.btn-soft:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(116, 185, 255, 0.3);
 }
 
-button:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-}
-
-.logout-btn,
-.delete-btn {
-  margin-top: 30px;
-  padding: 10px 15px;
+.btn-outline {
+  margin-top: 16px;
+  padding: 14px 32px;
+  border: 2px solid #e0e8ff;
+  border-radius: 28px;
+  background: transparent;
+  color: #1a237e;
   font-size: 16px;
-  background-color: #dc3545;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.logout-btn:hover,
-.delete-btn:hover {
-  background-color: #c82333;
-}
-
-.delete-btn {
-  background-color: #6c757d;
-}
-
-.delete-btn:hover {
-  background-color: #5a6268;
+.btn-outline:hover {
+  background: #e0e8ff;
+  border-color: #74b9ff;
+  color: #1a237e;
 }
 
 .modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  height: 100vh;
+  background: rgba(26, 35, 126, 0.5);
+  animation: fadeIn 0.4s ease;
 }
 
 .modal-content {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
+  background: #ffffff;
+  padding: 40px 50px;
+  border-radius: 24px;
+  box-shadow: 0 16px 48px rgba(116, 185, 255, 0.2);
   text-align: center;
+  max-width: 500px;
   width: 90%;
-  max-width: 400px;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-}
-
-.modal-content h2 {
-  font-size: 20px;
-  margin-bottom: 20px;
-  color: #343a40;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border: 1px solid #ced4da;
-  border-radius: 5px;
 }
 
 .modal-actions {
-  margin-top: 20px;
+  margin-top: 30px;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  gap: 24px;
 }
 
-.modal-actions button {
-  padding: 8px 20px;
-  font-size: 14px;
+/* 动画优化 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .settings-container {
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .divider {
+    display: none;
+    width: 100%;
+    height: 2px;
+    background: #e0e8ff;
+  }
+  
+  .card-body {
+    padding: 30px 20px;
+  }
+}
+
+/* 新增样式 */
+.form-group--actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.btn-outline {
+  margin-top: 0;
+}
+
+@media (max-width: 480px) {
+  .form-group--actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
 }
 </style>
