@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from 'vue';
-import { registerGetMyService, deleteAppointmentService} from '@/api/register.js';
+import { registerGetMyService, deleteAppointmentService} from '@/views/myAppointments/api.js';
 import Navbar from './Navbar.vue';
+
 
 // 预约挂号信息
 const registerlist = ref([]);
