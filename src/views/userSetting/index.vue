@@ -292,26 +292,40 @@ const mainContentStyle = computed(() => {
       </div>
       <div class="card-body">
         <div class="settings-container">
-          <div class="card-item">
-            <h2 class="section-title">账号设置</h2>
-            <div class="form-group">
-              <label for="username">修改用户名</label>
-              <input id="username" v-model="newUsername" type="text" placeholder="输入新用户名" maxlength="20" class="input-field" />
-              <button class="btn-soft" @click="openModal('username')" :disabled="loading">修改用户名</button>
+          <div class="settings-grid">
+            <!-- 左侧列 -->
+            <div class="card-item">
+              <h2 class="section-title">账号信息</h2>
+              <div class="form-group">
+                <label for="username">修改用户名</label>
+                <div class="input-with-button">
+                  <input id="username" v-model="newUsername" type="text" placeholder="输入新用户名" maxlength="20" class="input-field" />
+                  <button class="btn-soft" @click="openModal('username')" :disabled="loading">修改</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="email">绑定邮箱号</label>
+                <div class="input-with-button">
+                  <input id="email" v-model="newEmail" type="text" placeholder="输入新邮箱号" maxlength="40" class="input-field" />
+                  <button class="btn-soft" @click="openModal('email')" :disabled="loading">绑定</button>
+                </div>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="password">修改密码</label>
-              <input id="password" v-model="newPassword" type="password" placeholder="输入新密码" maxlength="20" class="input-field" />
-              <button class="btn-soft" @click="openModal('password')" :disabled="loading">修改密码</button>
-            </div>
-            <div class="form-group">
-              <label for="email">绑定邮箱号</label>
-              <input id="email" v-model="newEmail" type="text" placeholder="输入新邮箱号" maxlength="40" class="input-field" />
-              <button class="btn-soft" @click="openModal('email')" :disabled="loading">绑定邮箱号</button>
-            </div>
-            <div class="form-group form-group--actions">
-              <button class="btn-outline" @click="handleLogout" :disabled="loading">退出登录</button>
-              <button class="btn-outline" @click="openModal('delete')" :disabled="loading">注销账号</button>
+            
+            <!-- 右侧列 -->
+            <div class="card-item">
+              <h2 class="section-title">安全设置</h2>
+              <div class="form-group">
+                <label for="password">修改密码</label>
+                <div class="input-with-button">
+                  <input id="password" v-model="newPassword" type="password" placeholder="输入新密码" maxlength="20" class="input-field" />
+                  <button class="btn-soft" @click="openModal('password')" :disabled="loading">修改</button>
+                </div>
+              </div>
+              <div class="form-group form-group--actions">
+                <button class="btn-outline" @click="handleLogout" :disabled="loading">退出登录</button>
+                <button class="btn-outline btn-danger" @click="openModal('delete')" :disabled="loading">注销账号</button>
+              </div>
             </div>
           </div>
         </div>
@@ -398,6 +412,7 @@ const mainContentStyle = computed(() => {
     height: calc(100vh - 60px);
     overflow-y: auto;
     background: #f5f7fa;
+    transition: all 0.8s ease;
   }
 }
 
@@ -407,26 +422,27 @@ const mainContentStyle = computed(() => {
   justify-content: center;
   padding: 60px 20px;
   min-height: 100vh;
-  background: #f0f8ff;
+  background: #f5f7fa;
 }
 
 .soft-card {
   background: #ffffff;
-  border-radius: 24px;
-  box-shadow: 0 12px 32px rgba(116, 185, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(45, 170, 158, 0.15);
   overflow: hidden;
   width: 100%;
-  max-width: 1000px;
+  margin-bottom: 30px;
+  max-width: 1300px;
   animation: fadeInUp 0.6s ease-out;
 }
 
 .card-header {
-  background: linear-gradient(135deg, #6495ed, #9370db);
+  background: linear-gradient(135deg, #6a5acd, #5d4db8); /* 更改为柔和的紫色 */
   padding: 40px 30px;
   text-align: center;
   color: #ffffff;
-  border-radius: 24px 24px 0 0;
-  box-shadow: 0 4px 16px rgba(100, 149, 237, 0.1);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 4px 16px rgba(106, 90, 205, 0.2);
 }
 
 .card-header h1 {
@@ -448,25 +464,48 @@ const mainContentStyle = computed(() => {
   gap: 30px;
 }
 
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 左右两列布局 */
+  gap: 30px;
+}
+
 .card-item {
   flex: none;
   min-width: auto;
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto; /* 水平居中 */
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.card-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(106, 90, 205, 0.15);
 }
 
 .section-title {
   text-align: center; /* 标题居中 */
   border-left: none; /* 移除左侧边框 */
   padding-left: 0;
-  border-bottom: 4px solid #74b9ff; /* 改为底部边框 */
+  border-bottom: 4px solid #6a5acd; /* 改为底部边框，使用紫色主题 */
   padding-bottom: 8px;
   margin-bottom: 24px;
+  color: #2a3a3a;
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .form-group {
   margin-bottom: 24px;
+}
+
+.input-with-button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .form-group label {
@@ -481,7 +520,7 @@ const mainContentStyle = computed(() => {
   width: 100%;
   padding: 14px 20px;
   border: 2px solid #e0e8ff;
-  border-radius: 18px;
+  border-radius: 12px;
   font-size: 16px;
   transition: all 0.3s ease;
   background: #f5f9ff;
@@ -489,9 +528,13 @@ const mainContentStyle = computed(() => {
 
 .input-field:focus {
   outline: none;
-  border-color: #74b9ff;
-  box-shadow: 0 0 16px rgba(116, 185, 255, 0.2);
+  border-color: #6a5acd;
+  box-shadow: 0 0 16px rgba(106, 90, 205, 0.2);
   background: #ffffff;
+}
+
+.input-with-button .input-field {
+  flex: 1;
 }
 
 .divider {
@@ -500,31 +543,43 @@ const mainContentStyle = computed(() => {
 
 .btn-soft {
   width: fit-content;
-  margin-top: 16px;
-  padding: 14px 32px;
+  padding: 14px 24px;
   border: none;
-  border-radius: 28px;
-  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  border-radius: 12px;
+  background: #6a5acd;
   color: white;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 12px rgba(116, 185, 255, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background-color 0.3s;
+  box-shadow: 0 4px 12px rgba(106, 90, 205, 0.2);
+  white-space: nowrap;
 }
 
 .btn-soft:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(116, 185, 255, 0.3);
+  background: #5d4db8;
+  box-shadow: 0 8px 24px rgba(106, 90, 205, 0.3);
+}
+
+.btn-soft:disabled {
+  background: #b8b2e6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.input-with-button .btn-soft {
+  margin-top: 0;
 }
 
 .btn-outline {
   margin-top: 16px;
   padding: 14px 32px;
-  border: 2px solid #e0e8ff;
-  border-radius: 28px;
+  border: 2px solid #6a5acd;
+  border-radius: 12px;
   background: transparent;
-  color: #1a237e;
+  color: #6a5acd;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
@@ -532,9 +587,28 @@ const mainContentStyle = computed(() => {
 }
 
 .btn-outline:hover {
-  background: #e0e8ff;
-  border-color: #74b9ff;
-  color: #1a237e;
+  background: rgba(106, 90, 205, 0.1);
+  border-color: #5d4db8;
+  color: #5d4db8;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(106, 90, 205, 0.1);
+}
+
+.btn-outline:disabled {
+  border-color: #b8b2e6;
+  color: #b8b2e6;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  border-color: #ff5252;
+  color: #ff5252;
+}
+
+.btn-danger:hover {
+  background: rgba(255, 82, 82, 0.1);
+  border-color: #ff3838;
+  color: #ff3838;
 }
 
 .modal {
@@ -546,18 +620,32 @@ const mainContentStyle = computed(() => {
   left: 0;
   width: 100%;
   height: 100vh;
-  background: rgba(26, 35, 126, 0.5);
+  background: rgba(106, 90, 205, 0.3);
+  backdrop-filter: blur(4px);
   animation: fadeIn 0.4s ease;
+  z-index: 1100;
 }
 
 .modal-content {
   background: #ffffff;
   padding: 40px 50px;
-  border-radius: 24px;
-  box-shadow: 0 16px 48px rgba(116, 185, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(106, 90, 205, 0.25);
   text-align: center;
   max-width: 500px;
   width: 90%;
+  animation: zoomIn 0.3s ease;
+  transform-origin: center;
+}
+
+.modal-content h2 {
+  color: #2a3a3a;
+  margin-bottom: 16px;
+}
+
+.modal-content p {
+  color: #4a5a5a;
+  margin-bottom: 24px;
 }
 
 .modal-actions {
@@ -578,11 +666,15 @@ const mainContentStyle = computed(() => {
   to { opacity: 1; }
 }
 
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
-  .settings-container {
-    flex-direction: column;
-    gap: 30px;
+  .settings-grid {
+    grid-template-columns: 1fr; /* 小屏幕下改为单列 */
   }
   
   .divider {
@@ -594,6 +686,16 @@ const mainContentStyle = computed(() => {
   
   .card-body {
     padding: 30px 20px;
+  }
+  
+  .input-with-button {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .input-with-button .btn-soft {
+    width: 100%;
+    margin-top: 10px;
   }
 }
 

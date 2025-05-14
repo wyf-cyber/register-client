@@ -80,7 +80,7 @@ const toggleCollapse = () => {
   sessionStorage.setItem("sidebarCollapsed", isCollapsed.value);
 };
 const mainContentStyle = computed(() => {
-  const sidebarWidth = isCollapsed.value ? 80 : 200;
+  const sidebarWidth = isCollapsed.value ? 80 : 80;
   return { marginLeft: `${sidebarWidth}px`, width: `calc(100% - ${sidebarWidth}px)` };
 });
 const handleMobileToggle = () => { showMobileMenu.value = !showMobileMenu.value; }; // Added for consistency
