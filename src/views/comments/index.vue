@@ -6,6 +6,32 @@ import { ElMessage } from 'element-plus';
 import PageHeader from "@/views/components/header.vue";
 import CircleLoading from "@/views/components/circle_loading.vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
+import Messages from "@/views/components/messages.vue";
+
+// 格式化日期
+const formatDate = (dateObj) => {
+  if (!dateObj) return '';
+  const date = new Date(dateObj);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
+// 定义状态变量
+const router = useRouter();
+const username = ref(sessionStorage.getItem("UserName") || "未登录");
+const userRole = ref(sessionStorage.getItem("UserRole") === "admin" ? "管理员" : "普通用户");
+const isAdmin = ref(sessionStorage.getItem("UserRole") === "admin");
+const isCollapsed = ref(sessionStorage.getItem("sidebarCollapsed") === "true" ? true : false);
+const loading = ref(true);
+const showMobileMenu = ref(false);
+const singleOpenName = ref(["admin"]); // 控制菜单展开状态
+const menuTheme = ref("dark"); // 菜单主题
+
+// 添加活动标签页状态
+const activeTab = ref("commentsList"); // commentsList, addComment
+
+// 添加悬停评分状态
+const hoverRating = ref(0);
+
 const comments = ref([]);
 const newComment = ref({
     doctor: '',
@@ -187,11 +213,6 @@ onUnmounted(() => {
     </div>
 </div>
 </template>
-
-
-
-
-
 
 <style lang="less" scoped>
 .layout {
