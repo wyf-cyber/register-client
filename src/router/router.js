@@ -11,11 +11,24 @@ import Error404 from '@/views/template/404.vue';
 import Error403 from '@/views/template/403.vue';
 import Error500 from '@/views/template/500.vue';
 
+import reserverecords from '@/views/myAppointments/index.vue'//预约记录
 const routes = [
+  //添加预约记录路由
+  {
+    path: '/myAppointments',
+    name: 'reserverecords',
+    component: reserverecords,
+    meta: {requiresAuth:true }
+  },
+//修改登陆后默认界面至预约挂号界面
   {
     path: '/',
-    redirect: '/settings'
+    redirect: '/register'
   },
+  // {
+  //   path: '/',
+  //   redirect: '/settings'
+  // },
   {
     path: '/login',
     name: 'login',

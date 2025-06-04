@@ -37,6 +37,10 @@ CREATE TABLE `appointment`  (
 -- ----------------------------
 INSERT INTO `appointment` VALUES (1, '皮肤科', '刘杰', 'whu', '2025-04-16', '2025-04-15', 1744793679);
 INSERT INTO `appointment` VALUES (2, '儿科', '李涛', 'whu', '2025-04-16', '2025-04-15', 1744793951);
+INSERT INTO `appointment` VALUES (3, '眼科', '杨磊', 'whu', '2025-04-20', '2025-04-19', 1741221133);
+INSERT INTO `appointment` VALUES (4, '儿科', '李俊', 'whu', '2025-04-25', '2025-04-24', 1745221631);
+INSERT INTO `appointment` VALUES (5, '皮肤科', '刘强', 'whu', '2025-04-30', '2025-04-29', 1745889689);
+INSERT INTO `appointment` VALUES (6, '外科', '赵琳', 'whu', '2025-05-24', '2025-05-23', 1744561547);
 
 -- ----------------------------
 -- Table structure for doctors

@@ -20,13 +20,16 @@
     
     <!-- 用户面板 -->
     <div class="user-panel" v-if="showUserPanel">
-      <div class="user-avatar">
+      <!-- <div class="user-avatar">
         <el-icon size="24"><User /></el-icon>
-      </div>
-      <div class="user-info" v-show="!shrink">
+      </div> -->
+      <!-- <div class="user-info" v-show="!shrink">
         <div class="user-name">{{ username || '用户' }}</div>
         <div class="user-role">{{ userRole || '用户' }}</div>
-      </div>
+      </div> -->
+      <AvatarPopover 
+      :username = "username"
+      :userRole = "userRole"/>
     </div>
     
     <div :style="{background: bgColor}" class="ivu-shrinkable-menu">
@@ -78,7 +81,7 @@
 
 <script>
 import { User, Menu, Setting, Document, Location, Search, Star, Calendar, ArrowRight, ArrowLeft, ChatDotRound } from '@element-plus/icons-vue';
-
+import AvatarPopover from '@/components/AvatarPopover.vue' 
 export default {
   name: "shrinkableMenu",
   components: {
@@ -92,7 +95,8 @@ export default {
     Calendar,
     ArrowRight,
     ArrowLeft,
-    ChatDotRound
+    ChatDotRound,
+    AvatarPopover
   },
   props: {
     menuList: {
@@ -126,7 +130,8 @@ export default {
     // 显示用户面板
     showUserPanel: {
       type: Boolean,
-      default: false
+      // default: false
+      default: true
     },
     // 显示收缩按钮
     showShrinkButton: {
