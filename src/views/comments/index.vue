@@ -39,7 +39,30 @@ const newComment = ref({
     rating: 0
 });
 const selectedDoctor = ref('');
+const selectedRating = ref(0); // 添加评分筛选
 const messagesRef = ref(null);
+
+// 过滤后的评论列表
+const filteredComments = computed(() => {
+  let filtered = comments.value;
+  
+  // 按医生姓名筛选
+  if (selectedDoctor.value) {
+    const query = selectedDoctor.value.toLowerCase();
+    filtered = filtered.filter(comment => 
+      comment.doctor.toLowerCase().includes(query)
+    );
+  }
+  
+  // 按评分筛选
+  if (selectedRating.value > 0) {
+    filtered = filtered.filter(comment => 
+      comment.rating === selectedRating.value
+    );
+  }
+  
+  return filtered;
+});
 
 // 菜单处理
 const handleMenuChange = (name) => {
@@ -139,6 +162,13 @@ const addComment = async () => {
     }
 };
 
+// 重置筛选条件
+const resetFilters = () => {
+    selectedDoctor.value = '';
+    selectedRating.value = 0;
+    getComments();
+};
+
 // 窗口大小变化时重新调整
 const handleResize = () => {
   // 如果有图表，可以在这里处理图表大小调整
@@ -157,6 +187,9 @@ onUnmounted(() => {
 <template>
 <div class="layout">
     <PageHeader class="layout-header" />
+    
+    <!-- 消息通知组件 -->
+    <Messages ref="messagesRef" />
     
     <!-- 新增布局容器 -->
     <div class="layout-container">
@@ -177,39 +210,141 @@ onUnmounted(() => {
           @on-shrink="toggleCollapse"
         />
       </div>
-      <div class="comments-container">
-        <el-row :gutter="10">
-            <el-col :span="18">
-                <el-input v-model="selectedDoctor" placeholder="医生姓名" suffix-icon="el-icon-search" />
-            </el-col>
-            <el-col :span="6">
-                <el-button type="primary" @click="getCommentsByDoctor">查询</el-button>
-            </el-col>
-        </el-row>
-
-        <el-table :data="comments" style="width: 100%" v-if="comments.length > 0">
-            <el-table-column prop="doctor" label="医生" width="200" />
-            <el-table-column prop="content" label="评论内容" width="300" />
-            <el-table-column prop="rating" label="评分" width="200" />
-        </el-table>
-
-        <h2 style="text-align: center; font-weight: bold;">添加评论</h2>
-        <el-form ref="addCommentForm" :model="newComment" label-width="80px">
-            <el-form-item label="医生">
-                <el-input v-model="newComment.doctor" placeholder="医生姓名"></el-input>
-            </el-form-item>
-            <el-form-item label="评论内容">
-                <el-input type="textarea" v-model="newComment.content" placeholder="评论内容"></el-input>
-            </el-form-item>
-            <el-form-item label="评分">
-                <el-input-number v-model="newComment.rating" :min="1" :max="5" placeholder="评分"></el-input-number>
-            </el-form-item>
-            <el-form-item>
-                <el-button type="primary" @click="addComment">添加评论</el-button>
-            </el-form-item>
-        </el-form>
-        </div>
       
+      <!-- 页面内容 -->
+      <div class="layout-main" :style="mainContentStyle">
+        <div class="content-wrapper">
+          <h1>医生评价系统</h1>
+          
+          <!-- 导航选项卡 -->
+          <div class="tabs">
+            <div 
+              class="tab" 
+              :class="{ active: activeTab === 'commentsList' }"
+              @click="switchTab('commentsList')"
+            >
+              评价列表
+            </div>
+            <div 
+              class="tab" 
+              :class="{ active: activeTab === 'addComment' }"
+              @click="switchTab('addComment')"
+            >
+              添加评价
+            </div>
+          </div>
+          
+          <!-- 加载中提示 -->
+          <div v-if="loading" class="loading-container">
+            <CircleLoading />
+            <span>加载中...</span>
+          </div>
+          
+          <div v-else>
+            <!-- 评价列表 -->
+            <div v-if="activeTab === 'commentsList'" class="comments-list-container">
+              <!-- 筛选工具栏 -->
+              <div class="filter-bar">
+                <div class="search-box">
+                  <input
+                    type="text"
+                    placeholder="搜索医生姓名..."
+                    v-model="selectedDoctor"
+                    @keyup.enter="getCommentsByDoctor"
+                  />
+                  <button class="search-btn" @click="getCommentsByDoctor">
+                    <i class="ivu-icon ivu-icon-ios-search"></i>
+                    搜索
+                  </button>
+                </div>
+                
+                <div class="rating-filter">
+                  <label>评分筛选：</label>
+                  <div class="rating-selector">
+                    <span 
+                      v-for="n in 5" 
+                      :key="n" 
+                      class="star-selector"
+                      :class="{ 
+                        selected: n <= selectedRating,
+                        hovered: n <= hoverRating
+                      }"
+                      @click="selectedRating = selectedRating === n ? 0 : n"
+                      @mouseover="hoverRating = n"
+                      @mouseleave="hoverRating = 0"
+                    >★</span>
+                    <span class="rating-text">{{ selectedRating ? `${selectedRating}星` : '全部' }}</span>
+                  </div>
+                </div>
+                
+                <button class="reset-btn" @click="resetFilters">
+                  <i class="ivu-icon ivu-icon-ios-refresh"></i>
+                  重置筛选
+                </button>
+              </div>
+              
+              <!-- 评价列表 -->
+              <div class="comments-grid">
+                <div 
+                  v-for="(comment, index) in filteredComments" 
+                  :key="index"
+                  class="comment-card"
+                >
+                  <div class="comment-header">
+                    <h3>{{ comment.doctor }}</h3>
+                    <div class="rating-badge">
+                      <span v-for="n in 5" :key="n" class="star" :class="{ filled: n <= comment.rating }">★</span>
+                    </div>
+                  </div>
+                  <div class="comment-content">{{ comment.content }}</div>
+                </div>
+                <div v-if="filteredComments.length === 0" class="empty-data">
+                  暂无评价数据
+                </div>
+              </div>
+            </div>
+            
+            <!-- 添加评价表单 -->
+            <div v-if="activeTab === 'addComment'" class="add-comment-container">
+              <div class="comment-form">
+                <div class="form-group">
+                  <label>医生姓名：</label>
+                  <input type="text" v-model="newComment.doctor" placeholder="请输入医生姓名" required />
+                </div>
+                
+                <div class="form-group">
+                  <label>评价内容：</label>
+                  <textarea v-model="newComment.content" placeholder="请输入您的评价内容" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>评分：</label>
+                  <div class="rating-selector">
+                    <span 
+                      v-for="n in 5" 
+                      :key="n" 
+                      class="star-selector"
+                      :class="{ 
+                        selected: n <= newComment.rating,
+                        hovered: n <= hoverRating
+                      }"
+                      @click="newComment.rating = n"
+                      @mouseover="hoverRating = n"
+                      @mouseleave="hoverRating = 0"
+                    >★</span>
+                    <span class="rating-text">{{ newComment.rating ? `${newComment.rating}星` : '请选择评分' }}</span>
+                  </div>
+                </div>
+                
+                <div class="form-actions">
+                  <button class="submit-btn" @click="addComment">提交评价</button>
+                  <button class="cancel-btn" @click="switchTab('commentsList')">取消</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 </div>
 </template>
@@ -253,58 +388,6 @@ onUnmounted(() => {
     width: 200px;
     height: 100%;
     top: 0;
-    // margin-top: 60px;
-    flex-shrink: 0;
-    // background: #4f959d;
-    background: #2daa9e;
-    transition: all 0.8s ease;
-    box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-    position: relative;
-
-    &.collapsed {
-      width: 80px;
-    }
-  }
-
-  /* 主内容区域 */
-  &-main {
-    flex: 1;  
-    padding: 20px;
-    box-sizing: border-box;
-    // margin-top: 60px;
-    height: calc(100vh - 60px);
-    overflow-y: auto;
-    background: #f5f7fa;
-  }
-}
-
-.comments-container {
-    max-width: 1200px;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    // align-items: flex-start;
-    align-items: stretch;
-    margin: 0 auto;
-  /* 容器层 */
-  &-container {
-    display: flex;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    flex-direction: row;
-    margin-top: 60px;
-    height: calc(100vh - 60px);
-    width: 100%;
-    background-color: #f5f7fa;
-  }
-
-  /* 侧边栏 */
-  &-sider {
-    width: 200px;
-    height: 100%;
-    top: 0;
     flex-shrink: 0;
     background: #2daa9e;
     transition: all 0.8s ease;
@@ -324,62 +407,6 @@ onUnmounted(() => {
     height: calc(100vh - 60px);
     overflow-y: auto;
     background: #f5f7fa;
-  }
-}
-
-/* 选项卡样式 */
-.tabs {
-  display: flex;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #dcdfe6;
-}
-
-.tab {
-  padding: 10px 20px;
-  cursor: pointer;
-  font-size: 16px;
-  color: #606266;
-  position: relative;
-  transition: all 0.3s;
-}
-
-.tab.active {
-  color: #2daa9e;
-  font-weight: bold;
-}
-
-.tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: #2daa9e;
-}
-
-.tab:hover {
-  color: #2daa9e;
-}
-
-@media screen and (max-width: 768px) {
-  .layout {
-    &-container {
-      flex-direction: column;
-    }
-    
-    &-sider {
-      width: 100% !important;
-      height: auto;
-      
-      &.collapsed {
-        display: none;
-      }
-      
-      &.mobile-open {
-        display: block;
-      }
-    }
   }
 }
 
@@ -389,13 +416,6 @@ h1 {
   text-align: center;
   font-size: 28px;
   font-weight: bold;
-}
-
-h2 {
-  font-size: 20px;
-  margin: 30px 0 20px;
-  font-weight: bold;
-  color: #303133;
 }
 
 .content-wrapper {
@@ -413,11 +433,39 @@ h2 {
   padding: 50px;
 }
 
-/* 评论容器 */
-.comments-container, .add-comment-container {
+/* 标签页 */
+.tabs {
   display: flex;
-  flex-direction: column;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #dcdfe6;
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #606266;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.tab:hover {
+  color: #2daa9e;
+}
+
+.tab.active {
+  color: #2daa9e;
+  font-weight: bold;
+}
+
+.tab.active:after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
   width: 100%;
+  height: 2px;
+  background: #2daa9e;
 }
 
 /* 筛选工具栏 */
@@ -428,6 +476,10 @@ h2 {
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 15px;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .search-box {
@@ -458,32 +510,49 @@ h2 {
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.3s;
-  width: 100px;
+  white-space: nowrap;
 }
 
 .search-btn:hover {
   background: #248f85;
 }
 
-.search-btn .search-icon {
+.rating-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rating-filter label {
+  font-weight: bold;
+  color: #606266;
+  white-space: nowrap;
+}
+
+.reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 15px;
+  background: #909399;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+}
+
+.reset-btn:hover {
+  background: #a6a9ad;
+}
+
+.reset-btn i {
   font-size: 16px;
-  width: 20px;
-  text-align: center;
 }
 
-.search-btn i {
-  font-size: 16px;
-}
-
-/* 评论列表部分 */
-.comments-section {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
-}
-
+/* 评价列表网格 */
 .comments-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -492,9 +561,9 @@ h2 {
 }
 
 .comment-card {
-  background: #f9f9f9;
+  background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -503,7 +572,7 @@ h2 {
 
 .comment-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
 
 .comment-header {
@@ -540,16 +609,17 @@ h2 {
   line-height: 1.6;
 }
 
-/* 添加评论部分 */
-.add-comment-section {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+/* 添加评价表单 */
+.add-comment-container {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .comment-form {
-  max-width: 600px;
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .form-group {
@@ -581,6 +651,7 @@ h2 {
 .rating-selector {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .star-selector {
@@ -599,41 +670,72 @@ h2 {
 }
 
 .rating-text {
-  margin-left: 10px;
   color: #606266;
+  font-size: 14px;
 }
 
 .form-actions {
   display: flex;
-  justify-content: flex-start;
-  margin-top: 20px;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
 }
 
-.submit-btn {
+.submit-btn, .cancel-btn {
   padding: 10px 20px;
-  background: #2daa9e;
-  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
+  color: white;
   transition: background-color 0.3s;
+}
+
+.submit-btn {
+  background: #2daa9e;
 }
 
 .submit-btn:hover {
   background: #248f85;
 }
 
+.cancel-btn {
+  background: #909399;
+}
+
+.cancel-btn:hover {
+  background: #a6a9ad;
+}
+
 .empty-data {
   text-align: center;
   padding: 30px;
   color: #909399;
-  background: #f9f9f9;
+  grid-column: 1 / -1;
+  background: white;
   border-radius: 8px;
-  margin: 20px 0;
 }
 
 @media screen and (max-width: 768px) {
+  .layout {
+    &-container {
+      flex-direction: column;
+    }
+    
+    &-sider {
+      width: 100% !important;
+      height: auto;
+      
+      &.collapsed {
+        display: none;
+      }
+      
+      &.mobile-open {
+        display: block;
+      }
+    }
+  }
+
   .comments-grid {
     grid-template-columns: 1fr;
   }

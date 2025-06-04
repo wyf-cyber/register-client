@@ -20,15 +20,13 @@ const routes = [
     component: reserverecords,
     meta: {requiresAuth:true }
   },
-//修改登陆后默认界面至预约挂号界面
   {
     path: '/',
-    redirect: '/register'
+    redirect: () => {
+      const isAdmin = sessionStorage.getItem("UserRole") === "admin";
+      return isAdmin ? '/trafficView' : '/register';
+    }
   },
-  // {
-  //   path: '/',
-  //   redirect: '/settings'
-  // },
   {
     path: '/login',
     name: 'login',
