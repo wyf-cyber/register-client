@@ -6,6 +6,7 @@ import CircleLoading from "@/views/components/circle_loading.vue";
 import ShrinkableMenu from "@/views/navbar/menu.vue";
 // import Navbar from './Navbar.vue';
 
+
 // 预约挂号信息
 const registerlist = ref([]);
 

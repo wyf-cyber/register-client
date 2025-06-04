@@ -267,12 +267,9 @@ const mainContentStyle = computed(() => {
   <div class="layout">
     <PageHeader class="layout-header" />
     <Messages />
-    
-    <!-- 新增布局容器 -->
     <div class="layout-container">
-      <!-- 侧边栏 -->
       <div class="layout-sider" :class="{ collapsed: isCollapsed, 'mobile-open': showMobileMenu }">
-        <ShrinkableMenu 
+        <ShrinkableMenu
           :shrink="isCollapsed"
           :theme="menuTheme"
           :open-names="singleOpenName"
@@ -283,61 +280,76 @@ const mainContentStyle = computed(() => {
           :userRole="userRole"
           :isAdmin="isAdmin"
           @on-change="changeMenu"
-          @on-mobile-toggle="handleMobileToggle"
+          @on-mobile-toggle="toggleMobileMenu"
           @on-shrink="toggleCollapse"
         />
       </div>
-      
       <!-- 页面内容 -->
       <div class="layout-main" :style="mainContentStyle">
-        <div class="content-wrapper">
-          <h1>个人账号设置</h1>
-          <div class="settings-container">
-            <div class="settings-left">
-              <h2>修改账号设置</h2>
+    <div class="soft-card">
+      <div class="card-header">
+        <h1>个人账号设置</h1>
+      </div>
+      <div class="card-body">
+        <div class="settings-container">
+          <div class="settings-grid">
+            <!-- 左侧列 -->
+            <div class="card-item">
+              <h2 class="section-title">账号信息</h2>
               <div class="form-group">
                 <label for="username">修改用户名</label>
-                <input id="username" v-model="newUsername" type="text" placeholder="输入新用户名" maxlength="20" />
-                <button @click="openModal('username')" :disabled="loading">修改用户名</button>
+                <div class="input-with-button">
+                  <input id="username" v-model="newUsername" type="text" placeholder="输入新用户名" maxlength="20" class="input-field" />
+                  <button class="btn-soft" @click="openModal('username')" :disabled="loading">修改</button>
+                </div>
               </div>
               <div class="form-group">
-                <label for="password">修改密码</label>
-                <input id="password" v-model="newPassword" type="password" placeholder="输入新密码" maxlength="20" />
-                <button @click="openModal('password')" :disabled="loading">修改密码</button>
-              </div>
-            </div>
-            <div class="divider"></div>
-            <div class="settings-right">
-              <div class="form-group-rightup">
                 <label for="email">绑定邮箱号</label>
-                <input id="email" v-model="newEmail" type="text" placeholder="输入新邮箱号" maxlength="40" />
-                <button @click="openModal('email')" :disabled="loading">绑定邮箱号</button>
-              </div>
-              <!-- 注销账号 -->
-              <div class="form-group-rightdown">
-                <button @click="handleLogout" class="logout-btn" :disabled="loading">退出登录</button>
-                <button @click="openModal('delete')" class="delete-btn" :disabled="loading">注销账号</button>
+                <div class="input-with-button">
+                  <input id="email" v-model="newEmail" type="text" placeholder="输入新邮箱号" maxlength="40" class="input-field" />
+                  <button class="btn-soft" @click="openModal('email')" :disabled="loading">绑定</button>
+                </div>
               </div>
             </div>
-          </div>
-          <div v-if="showConfirmationModal" class="modal">
-            <div class="modal-content">
-              <h2>确认修改</h2>
-              <p>请输入当前密码以确认操作</p>
-              <input v-model="confirmPassword" type="password" placeholder="输入当前密码" />
-              <div class="modal-actions">
-                <button @click="handleConfirm" :disabled="loading">
-                  <CircleLoading v-if="loading" /> {{ loading ? "处理中..." : "确认" }}
-                </button>
-                <button @click="closeModal" :disabled="loading">取消</button>
+            
+            <!-- 右侧列 -->
+            <div class="card-item">
+              <h2 class="section-title">安全设置</h2>
+              <div class="form-group">
+                <label for="password">修改密码</label>
+                <div class="input-with-button">
+                  <input id="password" v-model="newPassword" type="password" placeholder="输入新密码" maxlength="20" class="input-field" />
+                  <button class="btn-soft" @click="openModal('password')" :disabled="loading">修改</button>
+                </div>
+              </div>
+              <div class="form-group form-group--actions">
+                <button class="btn-outline" @click="handleLogout" :disabled="loading">退出登录</button>
+                <button class="btn-outline btn-danger" @click="openModal('delete')" :disabled="loading">注销账号</button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <div v-if="showConfirmationModal" class="modal">
+      <div class="modal-content">
+        <h2>确认修改</h2>
+        <p>请输入当前密码以确认操作</p>
+        <input v-model="confirmPassword" type="password" placeholder="输入当前密码" class="input-field" />
+        <div class="modal-actions">
+          <button class="btn-soft" @click="handleConfirm" :disabled="loading">
+            <CircleLoading v-if="loading" /> {{ loading ? "处理中..." : "确认" }}
+          </button>
+          <button class="btn-outline" @click="closeModal" :disabled="loading">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    </div>
   </div>
 </template>
+
 
 <style lang="less" scoped>
 .layout {
@@ -400,220 +412,310 @@ const mainContentStyle = computed(() => {
     height: calc(100vh - 60px);
     overflow-y: auto;
     background: #f5f7fa;
+    transition: all 0.8s ease;
   }
 }
 
-@media screen and (max-width: 768px) {
-  .layout {
-    &-container {
-      flex-direction: column;
-    }
-    
-    &-sider {
-      width: 100% !important;
-      height: auto;
-      
-      &.collapsed {
-        display: none;
-      }
-      
-      &.mobile-open {
-        display: block;
-      }
-    }
-  }
-}
 
-.sidebar-shrink-button {
-  position: absolute;
-  right: -15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 30px;
-  height: 30px;
+.layout-main {
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: #dedbdb;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  z-index: 1001;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-  }
+  padding: 60px 20px;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.soft-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(45, 170, 158, 0.15);
+  overflow: hidden;
+  width: 100%;
+  margin-bottom: 30px;
+  max-width: 1300px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #6a5acd, #5d4db8); /* 更改为柔和的紫色 */
+  padding: 40px 30px;
+  text-align: center;
+  color: #ffffff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 4px 16px rgba(106, 90, 205, 0.2);
+}
+
+.card-header h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.card-body {
+  padding: 40px 50px;
+  display: grid;
+  gap: 40px;
 }
 
 .settings-container {
-  display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: 30px;
-  justify-content: space-between;
-  margin-top: 20px;
 }
 
-.settings-left, .settings-right {
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 左右两列布局 */
+  gap: 30px;
+}
+
+.card-item {
+  flex: none;
+  min-width: auto;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.card-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(106, 90, 205, 0.15);
+}
+
+.section-title {
+  text-align: center; /* 标题居中 */
+  border-left: none; /* 移除左侧边框 */
+  padding-left: 0;
+  border-bottom: 4px solid #6a5acd; /* 改为底部边框，使用紫色主题 */
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+  color: #2a3a3a;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.input-with-button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: #4a4a4a;
+  font-weight: 500;
+}
+
+.input-field {
+  width: 100%;
+  padding: 14px 20px;
+  border: 2px solid #e0e8ff;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #f5f9ff;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #6a5acd;
+  box-shadow: 0 0 16px rgba(106, 90, 205, 0.2);
+  background: #ffffff;
+}
+
+.input-with-button .input-field {
   flex: 1;
-  min-width: 280px;
 }
 
 .divider {
-  width: 1px;
-  background-color: #e0e0e0;
-  margin: 0 10px;
+  display: none;
 }
 
-@media screen and (max-width: 768px) {
-  .settings-container {
-    flex-direction: column;
-  }
-  
-  .divider {
-    display: none;
-  }
-  
-  .settings-left, .settings-right {
-    width: 100%;
-  }
-}
-
-h1 {
-  margin-bottom: 30px;
-  color: #343a40;
-  text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-h2 {
-  font-size: 20px;
-  margin-bottom: 20px;
-  font-weight: bold;
-}
-
-.form-group,
-.form-group-rightup,
-.form-group-rightdown {
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group-rightdown {
-  flex-direction: row;
-  gap: 30px;
-}
-
-label {
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #495057;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ced4da;
-  border-radius: 5px;
-  font-size: 16px;
-  outline: none;
-  max-width: 400px;
-}
-
-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-}
-
-button {
-  padding: 10px 15px;
-  margin-top: 10px;
-  background-color: #007bff;
-  color: white;
+.btn-soft {
+  width: fit-content;
+  padding: 14px 24px;
   border: none;
-  border-radius: 5px;
+  border-radius: 12px;
+  background: #6a5acd;
+  color: white;
   font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
-  align-self: flex-start;
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background-color 0.3s;
+  box-shadow: 0 4px 12px rgba(106, 90, 205, 0.2);
+  white-space: nowrap;
 }
 
-button:hover {
-  background-color: #0056b3;
+.btn-soft:hover {
+  transform: translateY(-3px);
+  background: #5d4db8;
+  box-shadow: 0 8px 24px rgba(106, 90, 205, 0.3);
 }
 
-button:disabled {
-  background-color: #6c757d;
+.btn-soft:disabled {
+  background: #b8b2e6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.input-with-button .btn-soft {
+  margin-top: 0;
+}
+
+.btn-outline {
+  margin-top: 16px;
+  padding: 14px 32px;
+  border: 2px solid #6a5acd;
+  border-radius: 12px;
+  background: transparent;
+  color: #6a5acd;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+  background: rgba(106, 90, 205, 0.1);
+  border-color: #5d4db8;
+  color: #5d4db8;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(106, 90, 205, 0.1);
+}
+
+.btn-outline:disabled {
+  border-color: #b8b2e6;
+  color: #b8b2e6;
   cursor: not-allowed;
 }
 
-.logout-btn,
-.delete-btn {
-  margin-top: 30px;
-  padding: 10px 15px;
-  font-size: 16px;
-  background-color: #dc3545;
+.btn-danger {
+  border-color: #ff5252;
+  color: #ff5252;
 }
 
-.logout-btn:hover,
-.delete-btn:hover {
-  background-color: #c82333;
-}
-
-.delete-btn {
-  background-color: #6c757d;
-}
-
-.delete-btn:hover {
-  background-color: #5a6268;
+.btn-danger:hover {
+  background: rgba(255, 82, 82, 0.1);
+  border-color: #ff3838;
+  color: #ff3838;
 }
 
 .modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  height: 100vh;
+  background: rgba(106, 90, 205, 0.3);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.4s ease;
+  z-index: 1100;
 }
 
 .modal-content {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
+  background: #ffffff;
+  padding: 40px 50px;
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(106, 90, 205, 0.25);
   text-align: center;
+  max-width: 500px;
   width: 90%;
-  max-width: 400px;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  animation: zoomIn 0.3s ease;
+  transform-origin: center;
 }
 
 .modal-content h2 {
-  font-size: 20px;
-  margin-bottom: 20px;
-  color: #343a40;
+  color: #2a3a3a;
+  margin-bottom: 16px;
 }
 
-.modal-content input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border: 1px solid #ced4da;
-  border-radius: 5px;
+.modal-content p {
+  color: #4a5a5a;
+  margin-bottom: 24px;
 }
 
 .modal-actions {
-  margin-top: 20px;
+  margin-top: 30px;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  gap: 24px;
 }
 
-.modal-actions button {
-  padding: 8px 20px;
-  font-size: 14px;
+/* 动画优化 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .settings-grid {
+    grid-template-columns: 1fr; /* 小屏幕下改为单列 */
+  }
+  
+  .divider {
+    display: none;
+    width: 100%;
+    height: 2px;
+    background: #e0e8ff;
+  }
+  
+  .card-body {
+    padding: 30px 20px;
+  }
+  
+  .input-with-button {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .input-with-button .btn-soft {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
+/* 新增样式 */
+.form-group--actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.btn-outline {
+  margin-top: 0;
+}
+
+@media (max-width: 480px) {
+  .form-group--actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
 }
 </style>
