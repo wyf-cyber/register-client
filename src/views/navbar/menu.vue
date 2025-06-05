@@ -5,10 +5,11 @@
 
 <template>
   <div class="sidebar-wrapper">
-    <!-- 移动端菜单开关按钮 -->
+    <!-- 移动端菜单开关按钮 
     <div class="mobile-menu-toggle" v-if="showMobileToggle" @click="handleMobileToggle">
       <el-icon size="24"><Menu /></el-icon>
     </div>
+  -->
     
     <!-- 收缩按钮 -->
     <div class="sidebar-shrink-button" v-if="showShrinkButton" @click="handleShrink">
