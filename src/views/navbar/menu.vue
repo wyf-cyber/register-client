@@ -20,9 +20,9 @@
     
     <!-- 用户面板 -->
     <div class="user-panel" v-if="showUserPanel">
-      <!-- <div class="user-avatar">
-        <el-icon size="24"><User /></el-icon>
-      </div> -->
+      <div class="user-avatar">
+        <!-- <el-icon size="24"><User /></el-icon> -->
+      </div>
       <!-- <div class="user-info" v-show="!shrink">
         <div class="user-name">{{ username || '用户' }}</div>
         <div class="user-role">{{ userRole || '用户' }}</div>

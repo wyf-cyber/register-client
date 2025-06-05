@@ -19,9 +19,11 @@
       </div>
       <div class="actions-grid">
         <el-button type="text" @click="goToAppointments">我的预约</el-button>
-        <el-button type="text" @click="goToReports">我的报告</el-button>
-        <el-button type="text" @click="goToPayments">缴费记录</el-button>
-        <el-button type="text" @click="editProfile">修改资料</el-button>
+        <el-button type="text" @click="goToReports">个人信息</el-button>
+      </div>
+      <div class="actions-grid">
+        <el-button type="text" @click="editProfile">账号设置</el-button>
+        <el-button type="text" @click="goToAssits">AI 助手</el-button>
       </div>
       <div class="logout-wrapper">
         <el-button type="danger" plain size="small" @click="handleLogout">退出登录</el-button>
@@ -46,8 +48,8 @@ const props = defineProps({
 })
 const router = useRouter()
 function goToAppointments() { router.push({ name: 'reserverecords' }) }
-function goToReports()      { router.push({ name: 'comments' }) }
-function goToPayments()     { router.push({ name: 'payments' }) }
+function goToReports()      { router.push({ name: 'profile' }) }
+function goToAssits()     { router.push({ name: 'assistant' }) }
 function editProfile()      { router.push({ name: 'settings' }) }
 function handleLogout() {
   sessionStorage.clear()
@@ -81,7 +83,7 @@ function handleLogout() {
 }
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, 2fr);
   gap: 4px;
 }
 .actions-grid .el-button {
