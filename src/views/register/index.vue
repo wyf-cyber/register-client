@@ -130,11 +130,8 @@ const handleSearch = () => {
   fetchDoctors();
 };
 
-// Date Change Handler
-const handleDateChange = () => {
-  // Debounce or directly fetch
-  fetchDoctors();
-};
+// Watch for filter changes to provide a reactive user experience
+watch(searchFilters, fetchDoctors);
 
 // Show Booking Confirmation
 const confirmAppointment = (doctor) => {
@@ -161,7 +158,7 @@ const bookAppointment = async () => {
   paymentModal.error = null;
   paymentModal.qrCodeUrl = '';
   paymentModal.visible = true;
-  actionLoading.value = true; // Indicate general action in progress
+  actionLoading.value = true;
 
   try {
     const addResponse = await addAppointmentService(
@@ -171,43 +168,48 @@ const bookAppointment = async () => {
       confirmModal.day
     );
 
-    // **ADJUST based on actual backend success response:**
     if (addResponse && (typeof addResponse === 'string' && addResponse.includes('成功'))) {
-        messagesRef.value?.show("预约请求成功，请支付", "success");
+      messagesRef.value?.show("预约请求成功，请支付", "success");
 
-        // Refresh list immediately to reflect potential state change
-        await fetchDoctors(); // Refresh in background while getting QR
+      // Optimistic UI update for immediate feedback
+      const doctorIndex = availableDoctors.value.findIndex(doc =>
+          doc.department === confirmModal.department &&
+          doc.doctor === confirmModal.doctor &&
+          doc.work_date === confirmModal.day
+      );
+      if (doctorIndex !== -1) {
+          const docToUpdate = availableDoctors.value[doctorIndex];
+          const updatedDoctor = { ...docToUpdate, isBookedByCurrentUser: true, state: docToUpdate.state + 1 };
+          availableDoctors.value[doctorIndex] = updatedDoctor;
+      }
 
-        // Fetch QR Code
-        try {
-            const qrCodeResponse = await payQRCodeService(username.value);
-            if (qrCodeResponse) {
-                paymentModal.qrCodeUrl = qrCodeResponse;
-            } else {
-                 throw new Error("未能获取支付二维码");
-            }
-        } catch(qrError) {
-            console.error("获取支付二维码出错:", qrError);
-            paymentModal.error = "获取支付二维码失败，请稍后重试或联系客服。";
-            // Keep modal open to show error
-        } finally {
-           paymentModal.isLoading = false;
+      // Now fetch QR code
+      try {
+        const qrCodeResponse = await payQRCodeService(username.value);
+        if (qrCodeResponse) {
+          paymentModal.qrCodeUrl = qrCodeResponse;
+        } else {
+          throw new Error("未能获取支付二维码");
         }
+      } catch (qrError) {
+        console.error("获取支付二维码出错:", qrError);
+        paymentModal.error = "获取支付二维码失败，请稍后重试或联系客服。";
+      } finally {
+        paymentModal.isLoading = false;
+        // Silently refetch in the background to ensure data consistency
+        fetchDoctors();
+      }
     } else {
-       throw new Error(addResponse || "预约失败，该时段可能已被预约或发生错误");
+      throw new Error(addResponse || "预约失败，该时段可能已被预约或发生错误");
     }
-
   } catch (error) {
     console.error("预约过程中出错:", error);
     messagesRef.value?.show(`${error.message || '预约失败，请重试'}`, "error");
     paymentModal.error = `预约失败: ${error.message || '请重试'}`;
     paymentModal.isLoading = false;
-    // Optionally close payment modal on booking failure before QR:
-    // paymentModal.visible = false;
+    await fetchDoctors(); // Revert optimistic update on error
   } finally {
-       actionLoading.value = false; // Action finished
-       // Refresh list again in case booking failed but state might need update
-       if (paymentModal.error) await fetchDoctors();
+    actionLoading.value = false;
   }
 };
 
@@ -221,10 +223,10 @@ const confirmCancelAppointment = (doctor) => {
   });
 };
 
-// Process Cancellation
+// Process Cancellation with Optimistic UI Update
 const cancelAppointment = async () => {
   cancelConfirmModal.visible = false;
-  actionLoading.value = true; // Indicate general action in progress
+  actionLoading.value = true;
   try {
     const response = await deleteAppointmentService(
       cancelConfirmModal.department,
@@ -233,19 +235,50 @@ const cancelAppointment = async () => {
       cancelConfirmModal.day
     );
 
-    // **ADJUST based on actual backend success response:**
     if (response && (typeof response === 'string' && response.includes('成功'))) {
       messagesRef.value?.show("预约取消成功", "success");
-      await fetchDoctors(); // Refresh the list to update UI
+
+      // Optimistic UI Update for immediate feedback
+      const doctorIndex = availableDoctors.value.findIndex(doc =>
+          doc.department === cancelConfirmModal.department &&
+          doc.doctor === cancelConfirmModal.doctor &&
+          doc.work_date === cancelConfirmModal.day
+      );
+      if (doctorIndex !== -1) {
+          const docToUpdate = availableDoctors.value[doctorIndex];
+          const updatedDoctor = { ...docToUpdate, isBookedByCurrentUser: false, state: docToUpdate.state > 0 ? docToUpdate.state - 1 : 0 };
+          availableDoctors.value[doctorIndex] = updatedDoctor;
+      }
+
+      // Silently refetch in the background to ensure consistency
+      fetchDoctors();
     } else {
       throw new Error(response || "取消失败，请重试");
     }
   } catch (error) {
     console.error("取消预约出错:", error);
     messagesRef.value?.show(`取消预约失败: ${error.message || '请重试'}`, "error");
+    // If cancellation fails on server, we must revert any potential UI changes
+    await fetchDoctors();
   } finally {
-     actionLoading.value = false; // Action finished
+     actionLoading.value = false;
   }
+};
+
+// Combined handler for booking/cancelling
+const handleAppointmentAction = (doctor) => {
+  if (doctor.isBookedByCurrentUser) {
+    confirmCancelAppointment(doctor);
+  } else {
+    confirmAppointment(doctor);
+  }
+};
+
+// Generates a descriptive title for the action button
+const getButtonTitle = (doctor) => {
+    if (!username.value || username.value === '未登录') return '请先登录';
+    if (doctor.isBookedByCurrentUser) return '取消您的预约';
+    return '预约此医生';
 };
 
 // Close Payment Modal
@@ -269,13 +302,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', () => {});
-});
-
-// Watch for date changes
-watch(() => searchFilters.date, (newDate) => {
-  if (newDate) {
-    fetchDoctors(); // Refetch when date changes
-  }
 });
 
 </script>
@@ -359,31 +385,21 @@ watch(() => searchFilters.date, (newDate) => {
                 </div>
                 <div class="doctor-detail">{{ doctor.detail }}</div>
                 <div class="status-bar">
-                  <span class="status-badge" :class="{ 'status-booked-other': doctor.state > 0 && !doctor.isBookedByCurrentUser, 'status-booked-user': doctor.isBookedByCurrentUser, 'status-free': doctor.state === 0 && !doctor.isBookedByCurrentUser }">
-                     {{ doctor.isBookedByCurrentUser ? '您已预约' : (doctor.state > 0 ? '已预约' : '可预约') }}
+                  <span class="status-badge" :class="{ 'status-booked-user': doctor.isBookedByCurrentUser, 'status-free': !doctor.isBookedByCurrentUser }">
+                     {{ doctor.isBookedByCurrentUser ? '您已预约' : '可预约' }}
                   </span>
-                   <span class="work-date">{{ doctor.work_date }}</span>
+                  <span class="appointment-count">已约: {{ doctor.state }} 人</span>
+                  <span class="work-date">{{ doctor.work_date }}</span>
                 </div>
                 <div class="doctor-actions">
-                   <!-- Show Book Button if NOT booked by current user -->
+                   <!-- Combined, toggling Book/Cancel Button -->
                   <button
-                    v-if="!doctor.isBookedByCurrentUser"
-                    class="book-btn"
-                    @click="confirmAppointment(doctor)"
-                    :disabled="doctor.state > 0 || actionLoading || !username || username === '未登录'"
-                    :title="doctor.state > 0 ? '当前时段不可预约' : (!username || username === '未登录' ? '请先登录' : '预约此医生')"
-                   >
-                    预约
-                  </button>
-                  <!-- Show Cancel Button if booked by current user -->
-                   <button
-                    v-if="doctor.isBookedByCurrentUser"
-                    class="cancel-app-btn"
-                    @click="confirmCancelAppointment(doctor)"
+                    :class="{ 'cancel-app-btn': doctor.isBookedByCurrentUser, 'book-btn': !doctor.isBookedByCurrentUser }"
+                    @click="handleAppointmentAction(doctor)"
                     :disabled="actionLoading || !username || username === '未登录'"
-                    title="取消您的预约"
-                   >
-                    取消预约
+                    :title="getButtonTitle(doctor)"
+                  >
+                    {{ doctor.isBookedByCurrentUser ? '取消预约' : '预约' }}
                   </button>
                 </div>
               </div>
@@ -474,8 +490,8 @@ watch(() => searchFilters.date, (newDate) => {
 .layout { min-height: 100vh; display: flex; flex-direction: column; width: 100%; overflow-x: hidden; background-color: #f5f7fa; }
 .layout-header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
 .layout-container { display: flex; position: fixed; left: 0; right: 0; bottom: 0; flex-direction: row; margin-top: 60px; height: calc(100vh - 60px); width: 100%; background-color: #f5f7fa; }
-.layout-sider { width: 200px; height: 100%; flex-shrink: 0; background: #2daa9e; transition: width 0.3s ease; box-shadow: 2px 0 6px rgba(0,0,0,0.1); position: relative; &.collapsed { width: 80px; } }
-.layout-main { flex: 1; padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; background: #f5f7fa; transition: margin-left 0.3s ease; }
+.layout-sider { top: 0; width: 200px; height: 100%; flex-shrink: 0; background: #2daa9e; transition: width 0.5s ease; box-shadow: 2px 0 6px rgba(0,0,0,0.1); position: relative; &.collapsed { width: 80px; } }
+.layout-main { flex: 1; padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; background: #f5f7fa; transition: margin-left 0.5s ease; }
 
 h1 { margin-bottom: 30px; color: #343a40; text-align: center; font-size: 28px; font-weight: bold; }
 .content-wrapper { max-width: 1200px; margin: 0 auto; padding: 20px; }
@@ -496,9 +512,9 @@ h1 { margin-bottom: 30px; color: #343a40; text-align: center; font-size: 28px; f
 .doctor-detail { margin-bottom: 15px; color: #606266; font-size: 14px; flex-grow: 1; max-height: 80px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; }
 .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; margin-top: 10px; }
 .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; border: 1px solid transparent; }
-.status-booked-other { color: #f56c6c; background-color: #fef0f0; border-color: #fbc4c4; } /* Red for booked by others */
 .status-booked-user { color: #409eff; background-color: #ecf5ff; border-color: #b3d8ff; } /* Blue for booked by user */
 .status-free { color: #67c23a; background-color: #f0f9eb; border-color: #c2e7b0; } /* Green for free */
+.appointment-count { font-size: 12px; color: #909399; font-weight: 500; }
 .work-date { font-size: 12px; color: #909399; }
 .doctor-actions { display: flex; justify-content: flex-end; margin-top: auto; padding-top: 15px; border-top: 1px solid #f0f2f5; }
 

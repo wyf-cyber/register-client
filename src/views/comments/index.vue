@@ -390,7 +390,7 @@ onUnmounted(() => {
     top: 0;
     flex-shrink: 0;
     background: #2daa9e;
-    transition: all 0.8s ease;
+    transition: width 0.5s ease;
     box-shadow: 2px 0 6px rgba(0,0,0,0.1);
     position: relative;
 
@@ -407,6 +407,7 @@ onUnmounted(() => {
     height: calc(100vh - 60px);
     overflow-y: auto;
     background: #f5f7fa;
+    transition: margin-left 0.5s ease;
   }
 }
 
@@ -446,7 +447,7 @@ h1 {
   font-size: 16px;
   color: #606266;
   position: relative;
-  transition: all 0.3s;
+  transition: all 0.5s;
 }
 
 .tab:hover {
@@ -509,7 +510,7 @@ h1 {
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.3s;
+  transition: background-color 0.5s;
   white-space: nowrap;
 }
 

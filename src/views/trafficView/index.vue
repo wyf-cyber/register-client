@@ -512,7 +512,7 @@ onUnmounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   z-index: 1001;
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
   
   &:hover {
     transform: translateY(-50%) scale(1.1);
